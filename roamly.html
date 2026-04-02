@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roamly — AI Budget Travel Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sand: #F5EFE0; --sand-dark: #E8DEC8; --ink: #1A1408; --ink-light: #4A3F2A;
+  --copper: #C4813A; --copper-light: #E09B50; --copper-pale: #F0D5B0;
+  --forest: #2D4A35; --sky: #4A7FA5; --white: #FEFCF8; --error: #C0392B;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: var(--sand); color: var(--ink); min-height: 100vh; }
+
+/* HERO */
+.hero-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 100%, rgba(196,129,58,.2) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 90% 10%, rgba(45,74,53,.13) 0%, transparent 50%),
+    var(--sand);
+  padding-bottom: 64px;
+}
+nav { display: flex; align-items: center; justify-content: space-between; padding: 28px 48px; }
+.logo { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 900; }
+.logo span { color: var(--copper); }
+.badge { background: var(--copper); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 14px; border-radius: 100px; }
+.hero-inner { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 32px 24px 0; gap: 16px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(196,129,58,.12); border: 1px solid rgba(196,129,58,.3); color: var(--copper); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 7px 16px; border-radius: 100px; }
+h1 { font-family: 'Playfair Display', serif; font-size: clamp(40px, 8vw, 80px); font-weight: 900; line-height: 1.02; letter-spacing: -2px; max-width: 800px; }
+h1 em { font-style: italic; color: var(--copper); }
+.hero-sub { font-size: 17px; font-weight: 300; color: var(--ink-light); max-width: 500px; line-height: 1.6; }
+
+/* FORM */
+.form-wrap { width: 100%; max-width: 760px; margin-top: 8px; }
+.form-card { background: var(--white); border-radius: 24px; padding: 36px; box-shadow: 0 2px 0 rgba(196,129,58,.25), 0 8px 40px rgba(26,20,8,.09), 0 32px 80px rgba(26,20,8,.05); border: 1px solid rgba(196,129,58,.15); }
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg.full { grid-column: 1 / -1; }
+label.lbl { font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--ink-light); }
+.iw { position: relative; }
+.iico { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+input, select {
+  width: 100%; padding: 12px 12px 12px 40px; background: var(--sand); border: 1.5px solid var(--sand-dark);
+  border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+  outline: none; transition: border-color .2s, box-shadow .2s; -webkit-appearance: none; appearance: none;
+}
+input:focus, select:focus { border-color: var(--copper); box-shadow: 0 0 0 3px rgba(196,129,58,.12); background: var(--white); }
+input::placeholder { color: #A09070; }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234A3F2A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 13px center; padding-right: 38px; cursor: pointer;
+}
+.prefs { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 100px; border: 1.5px solid var(--sand-dark); background: var(--sand); font-size: 12px; font-weight: 500; color: var(--ink-light); cursor: pointer; transition: all .15s; user-select: none; }
+.chip:hover { border-color: var(--copper-light); background: var(--copper-pale); color: var(--ink); }
+.chip.on { background: var(--copper); border-color: var(--copper); color: #fff; }
+.btn-cta { width: 100%; margin-top: 18px; padding: 16px; background: var(--ink); color: var(--copper-pale); border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: .5px; cursor: pointer; transition: all .2s; }
+.btn-cta:hover:not(:disabled) { background: #2D2010; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,20,8,.2); }
+.btn-cta:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.err { background: #FEF2F2; border: 1px solid #FECACA; color: var(--error); padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; line-height: 1.5; }
+
+/* LOADING */
+.loading { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 50px 20px; text-align: center; }
+.ring { width: 52px; height: 52px; border: 2.5px solid var(--sand-dark); border-top-color: var(--copper); border-radius: 50%; animation: spin 1.1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.step { font-size: 13px; color: var(--ink-light); opacity: 0; transform: translateY(4px); transition: all .4s; }
+.step.active { opacity: 1; transform: none; color: var(--copper); font-weight: 500; }
+.step.done { opacity: .3; transform: none; text-decoration: line-through; }
+
+/* RESULTS */
+.results { max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+.rh { text-align: center; padding: 48px 0 36px; }
+.rh h2 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 50px); font-weight: 900; letter-spacing: -1.5px; }
+.rh h2 em { font-style: italic; color: var(--copper); }
+.rh p { color: var(--ink-light); margin-top: 8px; font-size: 15px; }
+.rcard { background: var(--white); border-radius: 16px; padding: 28px; border: 1px solid rgba(196,129,58,.15); box-shadow: 0 2px 20px rgba(26,20,8,.05); margin-bottom: 16px; }
+.ch { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; }
+.cico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; background: rgba(196,129,58,.1); }
+.ct { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; }
+.cs { font-size: 11px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--ink-light); margin-top: 2px; }
+/* Budget */
+.bi { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--sand-dark); }
+.bi:last-child { border: none; }
+.bl { font-size: 13px; font-weight: 500; width: 130px; flex-shrink: 0; }
+.bw { flex: 1; height: 7px; background: var(--sand-dark); border-radius: 100px; overflow: hidden; }
+.bb { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--copper), var(--copper-light)); transition: width 1.1s cubic-bezier(.4,0,.2,1); }
+.ba { font-size: 13px; font-weight: 600; color: var(--copper); width: 60px; text-align: right; flex-shrink: 0; }
+.hack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.hbox { background: var(--sand); border-radius: 8px; padding: 13px; border-left: 3px solid var(--copper-light); }
+.hbox.g { border-color: var(--forest); }
+.hlbl { font-size: 10px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--ink-light); margin-bottom: 4px; }
+.htxt { font-size: 12px; line-height: 1.55; color: var(--ink-light); }
+/* Days */
+.day { border: 1.5px solid var(--sand-dark); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+.dh { background: var(--sand); padding: 11px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; transition: background .15s; }
+.dh:hover { background: var(--sand-dark); }
+.dnum { background: var(--copper); color: #fff; font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 100px; white-space: nowrap; }
+.dtitle { font-weight: 600; font-size: 14px; flex: 1; }
+.dcost { font-size: 12px; color: var(--copper); font-weight: 600; }
+.dchev { font-size: 11px; color: var(--ink-light); transition: transform .2s; }
+.db { padding: 16px; font-size: 13px; line-height: 1.75; color: var(--ink-light); border-top: 1px solid var(--sand-dark); display: none; }
+.dseg { margin-bottom: 10px; }
+.dseg strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; color: var(--copper); }
+.dtip { background: rgba(196,129,58,.08); border-radius: 6px; padding: 9px 11px; margin-top: 8px; font-size: 12px; color: var(--ink-light); }
+/* Restaurants */
+.rest { display: flex; gap: 11px; padding: 12px 0; border-bottom: 1px solid var(--sand-dark); align-items: flex-start; }
+.rest:last-child { border: none; }
+.rname { font-weight: 600; font-size: 14px; }
+.rtag { font-size: 11px; color: var(--copper); font-weight: 600; margin: 2px 0; }
+.rwhy { font-size: 12px; color: var(--ink-light); }
+/* Tips */
+.tip { display: flex; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--sand-dark); }
+.tip:last-child { border: none; }
+.tnum { width: 22px; height: 22px; background: var(--forest); color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.ttxt { font-size: 13px; line-height: 1.6; color: var(--ink-light); }
+/* Links */
+.lgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 9px; }
+.lnk { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: var(--sand); border: 1.5px solid var(--sand-dark); border-radius: 8px; text-decoration: none; color: var(--ink); font-size: 12px; font-weight: 600; transition: all .15s; }
+.lnk:hover { background: var(--copper-pale); border-color: var(--copper); color: var(--copper); transform: translateY(-1px); }
+.btn-reset { display: flex; align-items: center; gap: 7px; margin: 28px auto 0; padding: 13px 26px; background: transparent; border: 1.5px solid var(--ink-light); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--ink-light); cursor: pointer; transition: all .2s; }
+.btn-reset:hover { background: var(--ink); color: var(--copper-pale); border-color: var(--ink); }
+/* Stats */
+.stats { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.sn { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--copper); line-height: 1; }
+.sl { font-size: 12px; color: var(--ink-light); font-weight: 500; margin-top: 3px; }
+
+@media (max-width: 600px) {
+  nav { padding: 18px 20px; }
+  .form-card { padding: 22px 18px; }
+  .fgrid { grid-template-columns: 1fr; }
+  .hack-grid { grid-template-columns: 1fr; }
+  .results { padding: 0 16px 60px; }
+  .rcard { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero-bg">
+  <nav>
+    <div class="logo">Roam<span>ly</span></div>
+    <div class="badge">MVP · Beta</div>
+  </nav>
+
+  <div class="hero-inner">
+    <div class="eyebrow">✦ AI-powered travel hacking</div>
+    <h1>Tu viaje ideal,<br><em>dentro del presupuesto</em></h1>
+    <p class="hero-sub">Dinos tu presupuesto y preferencias. La IA diseña el itinerario completo, optimizado al céntimo.</p>
+
+    <div class="form-wrap">
+      <div class="form-card">
+
+        <!-- FORMULARIO -->
+        <div id="view-form">
+          <div class="fgrid">
+            <div class="fg">
+              <label class="lbl">Presupuesto total (€)</label>
+              <div class="iw"><span class="iico">💶</span><input id="f-budget" type="number" placeholder="ej. 800" min="100"></div>
+            </div>
+            <div class="fg">
+              <label class="lbl">Número de días</label>
+              <div class="iw"><span class="iico">📅</span><input id="f-days" type="number" placeholder="ej. 7" min="1" max="30"></div>
+            </div>
+            <div class="fg">
+              <label class="lbl">Número de personas</label>
+              <div class="iw"><span class="iico">👥</span><input id="f-people" type="number" placeholder="ej. 2" min="1" max="10"></div>
+            </div>
+            <div class="fg">
+              <label class="lbl">Ciudad de origen</label>
+              <div class="iw"><span class="iico">🛫</span><input id="f-origin" type="text" placeholder="ej. Madrid, Valencia…"></div>
+            </div>
+            <div class="fg full">
+              <label class="lbl">Destino (opcional — la IA elige si lo dejas vacío)</label>
+              <div class="iw"><span class="iico">📍</span><input id="f-dest" type="text" placeholder="ej. Lisboa, Praga, Marrakech…"></div>
+            </div>
+            <div class="fg full">
+              <label class="lbl">Temporada de viaje</label>
+              <div class="iw"><span class="iico">🗓️</span>
+                <select id="f-season">
+                  <option value="">¿Cuándo viajas aproximadamente?</option>
+                  <option value="enero-febrero">Invierno (Ene – Feb)</option>
+                  <option value="marzo-mayo">Primavera (Mar – May)</option>
+                  <option value="junio-agosto">Verano (Jun – Ago)</option>
+                  <option value="septiembre-noviembre">Otoño (Sep – Nov)</option>
+                  <option value="diciembre">Navidades (Dic)</option>
+                  <option value="flexible">Fechas flexibles (mejor precio)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg" style="margin-bottom: 16px;">
+            <label class="lbl">Preferencias de viaje</label>
+            <div class="prefs" id="prefs-wrap">
+              <div class="chip" data-v="cultura">🏛️ Cultura</div>
+              <div class="chip" data-v="fiesta">🎉 Fiesta</div>
+              <div class="chip" data-v="naturaleza">🌿 Naturaleza</div>
+              <div class="chip" data-v="relax">🏖️ Relax</div>
+              <div class="chip" data-v="gastronomia">🍜 Gastronomía</div>
+              <div class="chip" data-v="aventura">🧗 Aventura</div>
+              <div class="chip" data-v="low-cost">💸 Ultra low-cost</div>
+              <div class="chip" data-v="romantico">💑 Romántico</div>
+            </div>
+          </div>
+
+          <div id="form-err" class="err" style="display:none;"></div>
+          <button class="btn-cta" id="btn-gen">✦ Generar mi viaje con IA</button>
+        </div>
+
+        <!-- LOADING -->
+        <div id="view-loading" style="display:none;">
+          <div class="loading">
+            <div class="ring"></div>
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--ink);margin-bottom:6px;">Planificando tu viaje…</div>
+              <div style="font-size:13px;color:var(--ink-light);">Puede tardar 20–40 segundos</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-height:90px;">
+              <div class="step" id="s0">🔍 Analizando presupuesto y preferencias…</div>
+              <div class="step" id="s1">✈️ Evaluando destinos y vuelos óptimos…</div>
+              <div class="step" id="s2">🏨 Calculando alojamiento y costes…</div>
+              <div class="step" id="s3">🗺️ Construyendo itinerario día por día…</div>
+              <div class="step" id="s4">💡 Generando hacks de ahorro personalizados…</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /form-card -->
+    </div>
+
+    <div class="stats">
+      <div style="text-align:center;"><div class="sn">€0</div><div class="sl">Coste extra</div></div>
+      <div style="text-align:center;"><div class="sn">AI</div><div class="sl">Optimizado</div></div>
+      <div style="text-align:center;"><div class="sn">∞</div><div class="sl">Destinos posibles</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTADOS -->
+<div class="results" id="view-results" style="display:none;">
+  <div class="rh">
+    <h2 id="r-title">Tu viaje a <em id="r-dest">...</em></h2>
+    <p id="r-sub"></p>
+  </div>
+  <div id="r-grid"></div>
+  <div style="text-align:center;"><button class="btn-reset" onclick="resetApp()">← Planificar otro viaje</button></div>
+</div>
+
+<script>
+const WORKER_URL = 'https://wandering-cherry-8c8f.julio-lg22.workers.dev';
+const $ = id => document.getElementById(id);
+let selPrefs = [], stepTimer;
+
+// Chips
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    const v = c.dataset.v;
+    c.classList.toggle('on');
+    selPrefs = c.classList.contains('on') ? [...selPrefs, v] : selPrefs.filter(x => x !== v);
+  });
+});
+
+function showErr(msg) { const e = $('form-err'); e.textContent = msg; e.style.display = 'block'; }
+function hideErr() { $('form-err').style.display = 'none'; }
+
+function startSteps() {
+  let i = 0;
+  [0,1,2,3,4].forEach(n => $('s'+n).className = 'step');
+  $('s0').className = 'step active';
+  stepTimer = setInterval(() => {
+    if (i < 4) { $('s'+i).className = 'step done'; i++; $('s'+i).className = 'step active'; }
+  }, 6000);
+}
+function stopSteps() { clearInterval(stepTimer); }
+
+function buildPrompt(d) {
+  const bpp = Math.floor(d.budget / d.people);
+  const destTxt = d.dest ? `Destino elegido: ${d.dest}.` : `Destino FLEXIBLE — elige el mejor calidad-precio para este perfil.`;
+  const prefsTxt = d.prefs.length ? d.prefs.join(', ') : 'cultura y gastronomía';
+  const seasonTxt = d.season ? `Temporada: ${d.season}.` : '';
+  return `Planifica un viaje completo con estos datos:
+- Presupuesto TOTAL: ${d.budget}€ (${bpp}€/persona)
+- Duración: ${d.days} días
+- Personas: ${d.people}
+- Origen: ${d.origin}
+- ${destTxt} ${seasonTxt}
+- Preferencias: ${prefsTxt}
+
+Aplica travel hacking real: vuelos con escalas baratas, aeropuertos alternativos, barrios bien comunicados pero más económicos, menú del día, transporte público, tarjetas turísticas, free tours, etc.
+
+Responde ÚNICAMENTE con JSON puro y válido. Sin texto antes ni después. Sin markdown.
+
+{
+  "destino": "Ciudad, País",
+  "resumen": "2-3 frases por qué este destino maximiza el presupuesto",
+  "porque_este_destino": "justificación calidad-precio concreta",
+  "presupuesto": {
+    "total": ${d.budget},
+    "por_persona": ${bpp},
+    "desglose": [
+      {"categoria":"Vuelos","emoji":"✈️","estimacion":0,"porcentaje":0,"detalle":"ida y vuelta por persona"},
+      {"categoria":"Alojamiento","emoji":"🏨","estimacion":0,"porcentaje":0,"detalle":"X noches tipo alojamiento"},
+      {"categoria":"Comida","emoji":"🍽️","estimacion":0,"porcentaje":0,"detalle":"X€/día/persona"},
+      {"categoria":"Transporte local","emoji":"🚇","estimacion":0,"porcentaje":0,"detalle":"metro, bus, etc."},
+      {"categoria":"Actividades","emoji":"🎭","estimacion":0,"porcentaje":0,"detalle":"entradas, tours"},
+      {"categoria":"Extras","emoji":"💰","estimacion":0,"porcentaje":0,"detalle":"imprevistos"}
+    ]
+  },
+  "vuelo_hack": "aerolínea concreta + aeropuerto alternativo si aplica + precio estimado + mejor día para comprar",
+  "alojamiento_hack": "barrio concreto + tipo alojamiento recomendado + precio estimado por noche",
+  "itinerario": [
+    {
+      "dia": 1,
+      "titulo": "Título descriptivo del día",
+      "manana": "Actividades de mañana con nombres reales de lugares",
+      "tarde": "Actividades de tarde con nombres reales de lugares",
+      "noche": "Plan de noche con recomendaciones concretas",
+      "coste_estimado": "XX€/persona",
+      "tip_del_dia": "Truco de ahorro específico para este día"
+    }
+  ],
+  "restaurantes": [
+    {"nombre": "Nombre real del restaurante", "tipo": "tipo de cocina", "precio_medio": "XX€/persona", "por_que": "motivo concreto para recomendarlo"}
+  ],
+  "hacks_ahorro": [
+    "Hack concreto y accionable 1",
+    "Hack concreto y accionable 2",
+    "Hack concreto y accionable 3",
+    "Hack concreto y accionable 4",
+    "Hack concreto y accionable 5"
+  ]
+}`;
+}
+
+$('btn-gen').addEventListener('click', async () => {
+  hideErr();
+  const budget  = $('f-budget').value;
+  const days    = $('f-days').value;
+  const people  = $('f-people').value;
+  const origin  = $('f-origin').value.trim();
+  const dest    = $('f-dest').value.trim();
+  const season  = $('f-season').value;
+
+  if (!budget || !days || !people || !origin) {
+    showErr('Por favor rellena presupuesto, días, personas y ciudad de origen.'); return;
+  }
+
+  const meta = { budget, days, people, origin };
+  $('view-form').style.display = 'none';
+  $('view-loading').style.display = 'block';
+  startSteps();
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        temperature: 0.7,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content: 'Eres un experto en viajes low-cost y travel hacking con amplio conocimiento de Europa, Asia y América. Usas precios realistas del mercado actual. Recomiendas lugares y restaurantes reales y concretos. Respondes SIEMPRE con JSON puro válido, sin markdown ni texto extra.'
+          },
+          { role: 'user', content: buildPrompt({ budget, days, people, origin, dest, season, prefs: selPrefs }) }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e?.error?.message || 'HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    const trip = JSON.parse(match ? match[0] : clean);
+
+    stopSteps();
+    $('view-loading').style.display = 'none';
+    renderResults(trip, meta);
+
+  } catch (err) {
+    stopSteps();
+    $('view-loading').style.display = 'none';
+    $('view-form').style.display = 'block';
+    showErr('Error: ' + err.message);
+  }
+});
+
+function renderResults(t, meta) {
+  $('r-dest').textContent = t.destino;
+  $('r-sub').textContent = `${meta.days} días · ${meta.people} personas · ${meta.budget}€ · desde ${meta.origin}`;
+
+  const desglose = (t.presupuesto?.desglose || []).map((item, i) => {
+    const pct = item.porcentaje || Math.round(item.estimacion / t.presupuesto.total * 100);
+    return `
+      <div class="bi">
+        <div class="bl">${item.emoji} ${item.categoria}</div>
+        <div class="bw"><div class="bb" id="bb${i}" style="width:0%"></div></div>
+        <div class="ba">${item.estimacion}€</div>
+      </div>
+      <div style="font-size:11px;color:#A09070;margin:-4px 0 3px 140px;">${item.detalle}</div>`;
+  }).join('');
+
+  const days = (t.itinerario || []).map(d => `
+    <div class="day">
+      <div class="dh" onclick="toggleDay(this)">
+        <span class="dnum">Día ${d.dia}</span>
+        <span class="dtitle">${d.titulo}</span>
+        <span class="dcost">${d.coste_estimado || ''}</span>
+        <span class="dchev">▼</span>
+      </div>
+      <div class="db" style="${d.dia === 1 ? 'display:block' : 'display:none'}">
+        ${d.manana  ? `<div class="dseg"><strong>Mañana</strong>${d.manana}</div>` : ''}
+        ${d.tarde   ? `<div class="dseg"><strong style="color:var(--sky)">Tarde</strong>${d.tarde}</div>` : ''}
+        ${d.noche   ? `<div class="dseg"><strong style="color:var(--ink)">Noche</strong>${d.noche}</div>` : ''}
+        ${d.tip_del_dia ? `<div class="dtip">💡 <strong>Tip:</strong> ${d.tip_del_dia}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  const rests = (t.restaurantes || []).map(r => `
+    <div class="rest">
+      <span style="font-size:20px;flex-shrink:0;">🍽️</span>
+      <div>
+        <div class="rname">${r.nombre}</div>
+        <div class="rtag">${r.tipo} · ${r.precio_medio}</div>
+        <div class="rwhy">${r.por_que}</div>
+      </div>
+    </div>`).join('');
+
+  const hacks = (t.hacks_ahorro || []).map((h, i) => `
+    <div class="tip">
+      <div class="tnum">${i + 1}</div>
+      <div class="ttxt">${h}</div>
+    </div>`).join('');
+
+  $('r-grid').innerHTML = `
+    <!-- RESUMEN -->
+    <div class="rcard">
+      <div class="ch"><div class="cico">🌍</div><div><div class="ct">${t.destino}</div><div class="cs">Destino recomendado</div></div></div>
+      <p style="font-size:14px;line-height:1.7;color:var(--ink-light);margin-bottom:12px;">${t.resumen || ''}</p>
+      ${t.porque_este_destino ? `<div style="background:var(--sand);border-radius:8px;padding:13px 14px;font-size:13px;color:var(--ink-light);line-height:1.6;border-left:3px solid var(--copper);">💡 <strong>¿Por qué este destino?</strong><br>${t.porque_este_destino}</div>` : ''}
+    </div>
+
+    <!-- PRESUPUESTO -->
+    ${t.presupuesto ? `
+    <div class="rcard">
+      <div class="ch"><div class="cico">📊</div><div><div class="ct">Desglose del presupuesto</div><div class="cs">Total: ${t.presupuesto.total}€ · ${t.presupuesto.por_persona}€/persona</div></div></div>
+      ${desglose}
+      <div class="hack-grid">
+        <div class="hbox"><div class="hlbl">✈️ Hack vuelo</div><div class="htxt">${t.vuelo_hack || ''}</div></div>
+        <div class="hbox g"><div class="hlbl">🏨 Hack alojamiento</div><div class="htxt">${t.alojamiento_hack || ''}</div></div>
+      </div>
+    </div>` : ''}
+
+    <!-- ITINERARIO -->
+    ${t.itinerario?.length ? `
+    <div class="rcard">
+      <div class="ch"><div class="cico">🗺️</div><div><div class="ct">Itinerario día por día</div><div class="cs">${t.itinerario.length} días planificados</div></div></div>
+      ${days}
+    </div>` : ''}
+
+    <!-- RESTAURANTES -->
+    ${t.restaurantes?.length ? `
+    <div class="rcard">
+      <div class="ch"><div class="cico">🍜</div><div><div class="ct">Dónde comer</div><div class="cs">Selección calidad-precio</div></div></div>
+      ${rests}
+    </div>` : ''}
+
+    <!-- HACKS -->
+    ${t.hacks_ahorro?.length ? `
+    <div class="rcard">
+      <div class="ch"><div class="cico">💡</div><div><div class="ct">Hacks de ahorro</div><div class="cs">Maximiza tu experiencia</div></div></div>
+      ${hacks}
+    </div>` : ''}
+
+    <!-- LINKS -->
+    <div class="rcard">
+      <div class="ch"><div class="cico">🔗</div><div><div class="ct">Reserva ahora</div><div class="cs">Links directos</div></div></div>
+      <div class="lgrid">
+        ${[['✈️','Skyscanner','https://www.skyscanner.es/'],['🏨','Booking','https://www.booking.com/'],['🛏️','Hostelworld','https://www.hostelworld.com/'],['🏠','Airbnb','https://www.airbnb.es/'],['🎭','GetYourGuide','https://www.getyourguide.es/'],['🚆','Rome2rio','https://www.rome2rio.com/es/'],['🔍','Kayak','https://www.kayak.es/'],['🥝','Kiwi.com','https://kiwi.com/es/']].map(([ico,n,u])=>`<a href="${u}" target="_blank" class="lnk"><span style="font-size:16px;">${ico}</span>${n}</a>`).join('')}
+      </div>
+    </div>
+  `;
+
+  $('view-results').style.display = 'block';
+  $('view-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Animar barras de presupuesto
+  setTimeout(() => {
+    (t.presupuesto?.desglose || []).forEach((item, i) => {
+      const pct = item.porcentaje || Math.round(item.estimacion / t.presupuesto.total * 100);
+      const bar = document.getElementById('bb' + i);
+      if (bar) bar.style.width = Math.min(pct, 100) + '%';
+    });
+  }, 200);
+}
+
+function toggleDay(dh) {
+  const db = dh.nextElementSibling;
+  const chev = dh.querySelector('.dchev');
+  const open = db.style.display === 'block';
+  db.style.display = open ? 'none' : 'block';
+  chev.style.transform = open ? 'none' : 'rotate(180deg)';
+}
+
+function resetApp() {
+  $('view-results').style.display = 'none';
+  $('r-grid').innerHTML = '';
+  $('view-form').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
