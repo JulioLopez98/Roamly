@@ -278,61 +278,65 @@ function stopSteps() { clearInterval(stepTimer); }
 
 function buildPrompt(d) {
   const bpp = Math.floor(d.budget / d.people);
-  const destTxt = d.dest ? `Destino elegido: ${d.dest}.` : `Destino FLEXIBLE — elige el mejor calidad-precio para este perfil.`;
-  const prefsTxt = d.prefs.length ? d.prefs.join(', ') : 'cultura y gastronomía';
-  const seasonTxt = d.season ? `Temporada: ${d.season}.` : '';
-  return `Planifica un viaje completo con estos datos:
-- Presupuesto TOTAL: ${d.budget}€ (${bpp}€/persona)
-- Duración: ${d.days} días
-- Personas: ${d.people}
-- Origen: ${d.origin}
-- ${destTxt} ${seasonTxt}
-- Preferencias: ${prefsTxt}
+  const noches = Number(d.days) - 1;
+  const destTxt = d.dest ? 'Destino elegido: ' + d.dest + '.' : 'Destino FLEXIBLE: elige el mejor destino calidad-precio para este perfil.';
+  const prefsTxt = d.prefs.length ? d.prefs.join(', ') : 'cultura y gastronomia';
+  const seasonTxt = d.season ? 'Temporada: ' + d.season + '.' : '';
+  const dias = Number(d.days);
+  const personas = Number(d.people);
+  const presupuesto = Number(d.budget);
 
-Aplica travel hacking real: vuelos con escalas baratas, aeropuertos alternativos, barrios bien comunicados pero más económicos, menú del día, transporte público, tarjetas turísticas, free tours, etc.
+  let dayLines = [];
+  for (let i = 1; i <= dias; i++) {
+    dayLines.push('    {"dia":' + i + ',"titulo":"Titulo dia ' + i + '","manana":"actividades manana dia ' + i + '","tarde":"actividades tarde dia ' + i + '","noche":"plan noche dia ' + i + '","coste_estimado":"XX euros/persona","tip_del_dia":"truco ahorro dia ' + i + '"}');
+  }
+  const dayTemplate = dayLines.join(',\n');
 
-Responde ÚNICAMENTE con JSON puro y válido. Sin texto antes ni después. Sin markdown.
-
-{
-  "destino": "Ciudad, País",
-  "resumen": "2-3 frases por qué este destino maximiza el presupuesto",
-  "porque_este_destino": "justificación calidad-precio concreta",
-  "presupuesto": {
-    "total": ${d.budget},
-    "por_persona": ${bpp},
-    "desglose": [
-      {"categoria":"Vuelos","emoji":"✈️","estimacion":0,"porcentaje":0,"detalle":"ida y vuelta por persona"},
-      {"categoria":"Alojamiento","emoji":"🏨","estimacion":0,"porcentaje":0,"detalle":"X noches tipo alojamiento"},
-      {"categoria":"Comida","emoji":"🍽️","estimacion":0,"porcentaje":0,"detalle":"X€/día/persona"},
-      {"categoria":"Transporte local","emoji":"🚇","estimacion":0,"porcentaje":0,"detalle":"metro, bus, etc."},
-      {"categoria":"Actividades","emoji":"🎭","estimacion":0,"porcentaje":0,"detalle":"entradas, tours"},
-      {"categoria":"Extras","emoji":"💰","estimacion":0,"porcentaje":0,"detalle":"imprevistos"}
-    ]
-  },
-  "vuelo_hack": "aerolínea concreta + aeropuerto alternativo si aplica + precio estimado + mejor día para comprar",
-  "alojamiento_hack": "barrio concreto + tipo alojamiento recomendado + precio estimado por noche",
-  "itinerario": [
-    {
-      "dia": 1,
-      "titulo": "Título descriptivo del día",
-      "manana": "Actividades de mañana con nombres reales de lugares",
-      "tarde": "Actividades de tarde con nombres reales de lugares",
-      "noche": "Plan de noche con recomendaciones concretas",
-      "coste_estimado": "XX€/persona",
-      "tip_del_dia": "Truco de ahorro específico para este día"
-    }
-  ],
-  "restaurantes": [
-    {"nombre": "Nombre real del restaurante", "tipo": "tipo de cocina", "precio_medio": "XX€/persona", "por_que": "motivo concreto para recomendarlo"}
-  ],
-  "hacks_ahorro": [
-    "Hack concreto y accionable 1",
-    "Hack concreto y accionable 2",
-    "Hack concreto y accionable 3",
-    "Hack concreto y accionable 4",
-    "Hack concreto y accionable 5"
-  ]
-}`;
+  return 'Planifica un viaje con estos datos EXACTOS:\n' +
+    '- Presupuesto TOTAL (para ' + personas + ' personas): ' + presupuesto + ' euros\n' +
+    '- Por persona: ' + bpp + ' euros\n' +
+    '- Dias: EXACTAMENTE ' + dias + ' dias (' + noches + ' noches)\n' +
+    '- Personas: ' + personas + '\n' +
+    '- Origen: ' + d.origin + '\n' +
+    '- ' + destTxt + ' ' + seasonTxt + '\n' +
+    '- Preferencias: ' + prefsTxt + '\n\n' +
+    'REGLAS OBLIGATORIAS:\n' +
+    '1. "itinerario" debe tener EXACTAMENTE ' + dias + ' objetos, uno por dia. Es OBLIGATORIO.\n' +
+    '2. La suma de "estimacion" en desglose debe ser aproximadamente ' + presupuesto + ' euros totales.\n' +
+    '3. Alojamiento = ' + noches + ' noches.\n' +
+    '4. "restaurantes" debe tener EXACTAMENTE 4 restaurantes reales.\n' +
+    '5. Usa nombres REALES de lugares, calles y restaurantes.\n' +
+    '6. Travel hacking: aeropuertos alternativos, barrios economicos bien ubicados, menu del dia, transporte publico, free tours.\n\n' +
+    'Responde SOLO con JSON valido. Sin texto extra. Sin markdown.\n\n' +
+    '{\n' +
+    '  "destino": "Ciudad, Pais",\n' +
+    '  "resumen": "2-3 frases",\n' +
+    '  "porque_este_destino": "justificacion",\n' +
+    '  "presupuesto": {\n' +
+    '    "total": ' + presupuesto + ',\n' +
+    '    "por_persona": ' + bpp + ',\n' +
+    '    "desglose": [\n' +
+    '      {"categoria":"Vuelos","emoji":"\u2708\uFE0F","estimacion":0,"porcentaje":0,"detalle":"ida vuelta ' + personas + ' personas"},\n' +
+    '      {"categoria":"Alojamiento","emoji":"\uD83C\uDFC8","estimacion":0,"porcentaje":0,"detalle":"' + noches + ' noches"},\n' +
+    '      {"categoria":"Comida","emoji":"\uD83C\uDF7D\uFE0F","estimacion":0,"porcentaje":0,"detalle":"' + dias + ' dias x ' + personas + ' personas"},\n' +
+    '      {"categoria":"Transporte local","emoji":"\uD83D\uDE87","estimacion":0,"porcentaje":0,"detalle":"total viaje"},\n' +
+    '      {"categoria":"Actividades","emoji":"\uD83C\uDFAD","estimacion":0,"porcentaje":0,"detalle":"total viaje"},\n' +
+    '      {"categoria":"Extras","emoji":"\uD83D\uDCB0","estimacion":0,"porcentaje":0,"detalle":"imprevistos"}\n' +
+    '    ]\n' +
+    '  },\n' +
+    '  "vuelo_hack": "aerolinea + precio estimado + tip",\n' +
+    '  "alojamiento_hack": "barrio + tipo + precio/noche",\n' +
+    '  "itinerario": [\n' +
+    dayTemplate + '\n' +
+    '  ],\n' +
+    '  "restaurantes": [\n' +
+    '    {"nombre":"Restaurante 1 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"},\n' +
+    '    {"nombre":"Restaurante 2 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"},\n' +
+    '    {"nombre":"Restaurante 3 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"},\n' +
+    '    {"nombre":"Restaurante 4 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"}\n' +
+    '  ],\n' +
+    '  "hacks_ahorro": ["hack1","hack2","hack3","hack4","hack5"]\n' +
+    '}';
 }
 
 $('btn-gen').addEventListener('click', async () => {
