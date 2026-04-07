@@ -316,12 +316,12 @@ function buildPrompt(d) {
     '    "total": ' + presupuesto + ',\n' +
     '    "por_persona": ' + bpp + ',\n' +
     '    "desglose": [\n' +
-    '      {"categoria":"Vuelos","emoji":"\u2708\uFE0F","estimacion":0,"porcentaje":0,"detalle":"ida vuelta ' + personas + ' personas"},\n' +
-    '      {"categoria":"Alojamiento","emoji":"\uD83C\uDFC8","estimacion":0,"porcentaje":0,"detalle":"' + noches + ' noches"},\n' +
-    '      {"categoria":"Comida","emoji":"\uD83C\uDF7D\uFE0F","estimacion":0,"porcentaje":0,"detalle":"' + dias + ' dias x ' + personas + ' personas"},\n' +
-    '      {"categoria":"Transporte local","emoji":"\uD83D\uDE87","estimacion":0,"porcentaje":0,"detalle":"total viaje"},\n' +
-    '      {"categoria":"Actividades","emoji":"\uD83C\uDFAD","estimacion":0,"porcentaje":0,"detalle":"total viaje"},\n' +
-    '      {"categoria":"Extras","emoji":"\uD83D\uDCB0","estimacion":0,"porcentaje":0,"detalle":"imprevistos"}\n' +
+    '      {"categoria":"Vuelos","emoji":"✈️","estimacion":0,"porcentaje":0,"detalle":"vuelo ida y vuelta, ' + personas + ' personas"},\n' +
+    '      {"categoria":"Alojamiento","emoji":"🏨","estimacion":0,"porcentaje":0,"detalle":"' + noches + ' noches"},\n' +
+    '      {"categoria":"Comida","emoji":"🍽️","estimacion":0,"porcentaje":0,"detalle":"' + dias + ' dias x ' + personas + ' personas = total"},\n' +
+    '      {"categoria":"Transporte local","emoji":"🚇","estimacion":0,"porcentaje":0,"detalle":"total viaje"},\n' +
+    '      {"categoria":"Actividades","emoji":"🎭","estimacion":0,"porcentaje":0,"detalle":"total viaje"},\n' +
+    '      {"categoria":"Extras","emoji":"💰","estimacion":0,"porcentaje":0,"detalle":"imprevistos"}\n' +
     '    ]\n' +
     '  },\n' +
     '  "vuelo_hack": "aerolinea + precio estimado + tip",\n' +
