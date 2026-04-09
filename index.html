@@ -119,6 +119,13 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .ttxt { font-size: 13px; line-height: 1.6; color: var(--ink-light); }
 .btn-reset { display: flex; align-items: center; gap: 7px; margin: 28px auto 0; padding: 13px 26px; background: transparent; border: 1.5px solid var(--ink-light); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--ink-light); cursor: pointer; transition: all .2s; }
 .btn-reset:hover { background: var(--ink); color: var(--copper-pale); border-color: var(--ink); }
+.dseg-txt { font-size: 13px; line-height: 1.75; color: var(--ink-light); margin-top: 4px; }
+.ticket-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 7px 14px; background: var(--copper-pale); border: 1.5px solid var(--copper); border-radius: 100px; font-size: 12px; font-weight: 600; color: var(--copper); text-decoration: none; transition: all .15s; }
+.ticket-btn:hover { background: var(--copper); color: #fff; }
+.rest-badge { background: rgba(45,74,53,.1); color: var(--forest); font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 100px; letter-spacing: .5px; text-transform: uppercase; }
+.rest-plato { font-size: 12px; color: var(--forest); font-weight: 600; margin-top: 3px; }
+.rest-link { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; color: var(--sky); text-decoration: none; }
+.rest-link:hover { text-decoration: underline; }
 .stats { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
 .sn { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--copper); line-height: 1; }
 .sl { font-size: 12px; color: var(--ink-light); font-weight: 500; margin-top: 3px; }
@@ -152,7 +159,8 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
           <div class="fgrid">
             <div class="fg"><label class="lbl">Presupuesto total (€)</label><div class="iw"><span class="iico">💶</span><input id="f-budget" type="number" placeholder="ej. 800" min="100"></div></div>
 
-            <div class="fg"><label class="lbl">Número de personas</label><div class="iw"><span class="iico">👥</span><input id="f-people" type="number" placeholder="ej. 2" min="1" max="10"></div></div>
+            <div class="fg"><label class="lbl">Adultos</label><div class="iw"><span class="iico">👤</span><input id="f-adults" type="number" placeholder="ej. 2" min="1" max="10" value="2"></div></div>
+            <div class="fg"><label class="lbl">Niños (opcional)</label><div class="iw"><span class="iico">🧒</span><input id="f-children" type="number" placeholder="0" min="0" max="10" value="0"></div></div>
             <div class="fg"><label class="lbl">Ciudad de origen</label><div class="iw"><span class="iico">🛫</span><input id="f-origin" type="text" placeholder="ej. Madrid, Valencia…"></div></div>
             <div class="fg full"><label class="lbl">Destino (opcional — la IA elige si lo dejas vacío)</label><div class="iw"><span class="iico">📍</span><input id="f-dest" type="text" placeholder="ej. Lisboa, Praga, Marrakech…"></div></div>
             <div class="fg"><label class="lbl">Fecha de ida</label><div class="iw"><span class="iico">🛫</span><input type="date" id="f-checkin" style="padding-left:40px;"></div></div>
@@ -278,19 +286,23 @@ function buildFlightUrl(origin, destino, checkin, checkout) {
   const dates = getSeasonDates(checkin, checkout);
   const ci = dates.ci.replace(/-/g,'');
   const co = dates.co.replace(/-/g,'');
-  const adults = Number(currentMeta.people) || 1;
-  return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adults+'&currency=EUR';
+  const adults = Number(currentMeta.adults) || 1;
+  return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adults+'&children='+(Number(currentMeta.children)||0)+'&currency=EUR';
 }
 
 function buildHotelUrl(destino, checkin, checkout, people) {
   const city = destino.split(',')[0].trim();
   const dates = getSeasonDates(checkin, checkout);
-  return 'https://www.booking.com/searchresults.es.html?ss='+encodeURIComponent(city)+'&checkin='+dates.ci+'&checkout='+dates.co+'&group_adults='+people+'&group_children=0&no_rooms=1&order=price';
+  const adults = Number(currentMeta.adults) || people;
+  const children = Number(currentMeta.children) || 0;
+  return 'https://www.booking.com/searchresults.es.html?ss='+encodeURIComponent(city)+'&checkin='+dates.ci+'&checkout='+dates.co+'&group_adults='+adults+'&group_children='+children+'&no_rooms=1&order=price';
 }
 
 function buildAirbnbUrl(destino, checkin, checkout, people) {
   const city = destino.split(',')[0].trim();
-  return 'https://www.airbnb.es/s/'+encodeURIComponent(city)+'/homes?checkin='+checkin+'&checkout='+checkout+'&adults='+people+'&price_max=150';
+  const adultCount = Number(currentMeta.adults) || people;
+  const childCount = Number(currentMeta.children) || 0;
+  return 'https://www.airbnb.es/s/'+encodeURIComponent(city)+'/homes?checkin='+checkin+'&checkout='+checkout+'&adults='+adultCount+'&children='+childCount;
 }
 
 function buildActivitiesUrl(destino, checkin, checkout) {
@@ -325,14 +337,26 @@ function buildPrompt(d) {
   const presupuesto = Number(d.budget);
   let dayLines = [];
   for(let i=1;i<=dias;i++){
-    dayLines.push('    {"dia":'+i+',"titulo":"Titulo dia '+i+'","manana":"actividades manana dia '+i+'","tarde":"actividades tarde dia '+i+'","noche":"plan noche dia '+i+'","coste_estimado":"XX euros/persona","tip_del_dia":"truco ahorro dia '+i+'"}');
+    dayLines.push('    {'+
+      '"dia":'+i+','+
+      '"titulo":"Titulo descriptivo dia '+i+'",'+
+      '"manana":"Descripcion detallada actividades manana dia '+i+': que ver, cuanto tiempo, precio entrada si aplica, consejo practico",'+
+      '"manana_entrada":"URL para comprar entrada o reservar actividad manana dia '+i+' (GetYourGuide, web oficial, o null si es gratis)",'+
+      '"tarde":"Descripcion detallada actividades tarde dia '+i+': que ver, cuanto tiempo, precio entrada si aplica, consejo practico",'+
+      '"tarde_entrada":"URL para comprar entrada o reservar actividad tarde dia '+i+' (GetYourGuide, web oficial, o null si es gratis)",'+
+      '"noche":"Descripcion detallada plan de noche dia '+i+': zona, ambiente, que hacer, precio estimado",'+
+      '"coste_estimado":"XX euros/persona",'+
+      '"tip_del_dia":"Truco de ahorro muy concreto y accionable para este dia especifico"'+
+    '}');
   }
   const dayTemplate = dayLines.join(',\n');
   return 'Planifica un viaje con estos datos EXACTOS:\n' +
     '- Presupuesto TOTAL (para '+personas+' personas): '+presupuesto+' euros\n' +
     '- Por persona: '+bpp+' euros\n' +
     '- Dias: EXACTAMENTE '+dias+' dias ('+noches+' noches)\n' +
-    '- Personas: '+personas+'\n' +
+    '- Adultos: '+(d.adults||personas)+'\n' +
+    '- Ninos: '+(d.children||0)+'\n' +
+    '- Total personas: '+personas+'\n' +
     '- Origen: '+d.origin+'\n' +
     '- '+destTxt+' '+seasonTxt+'\n' +
     '- Preferencias: '+prefsTxt+'\n\n' +
@@ -366,10 +390,10 @@ function buildPrompt(d) {
     dayTemplate+'\n' +
     '  ],\n' +
     '  "restaurantes": [\n' +
-    '    {"nombre":"Restaurante 1 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"},\n' +
-    '    {"nombre":"Restaurante 2 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"},\n' +
-    '    {"nombre":"Restaurante 3 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"},\n' +
-    '    {"nombre":"Restaurante 4 real","tipo":"cocina","precio_medio":"XX euros","por_que":"motivo"}\n' +
+    '    {"nombre":"Nombre real 1","tipo":"tipo cocina","precio_medio":"XX euros","plato_estrella":"plato tipico o recomendado","descripcion":"2-3 frases describiendo el ambiente, especialidad y por que es buena opcion calidad-precio","link":"URL web oficial o Google Maps del restaurante o null si no tiene","es_callejero":false},\n' +
+    '    {"nombre":"Nombre real 2","tipo":"tipo cocina","precio_medio":"XX euros","plato_estrella":"plato tipico o recomendado","descripcion":"2-3 frases describiendo el ambiente, especialidad y por que es buena opcion calidad-precio","link":"URL web oficial o Google Maps del restaurante o null si no tiene","es_callejero":false},\n' +
+    '    {"nombre":"Nombre real 3","tipo":"tipo cocina","precio_medio":"XX euros","plato_estrella":"plato tipico o recomendado","descripcion":"2-3 frases describiendo el ambiente, especialidad y por que es buena opcion calidad-precio","link":"URL web oficial o Google Maps del restaurante o null si no tiene","es_callejero":false},\n' +
+    '    {"nombre":"Nombre real 4","tipo":"tipo cocina","precio_medio":"XX euros","plato_estrella":"plato tipico o recomendado","descripcion":"2-3 frases describiendo el ambiente, especialidad y por que es buena opcion calidad-precio","link":"URL web oficial o Google Maps del restaurante o null si no tiene","es_callejero":true}\n' +
     '  ],\n' +
     '  "hacks_ahorro": ["hack1","hack2","hack3","hack4","hack5"]\n' +
     '}';
@@ -377,18 +401,21 @@ function buildPrompt(d) {
 
 $('btn-gen').addEventListener('click', async () => {
   hideErr();
-  const budget=$('f-budget').value, people=$('f-people').value;
+  const budget=$('f-budget').value;
+  const adults=Number($('f-adults').value)||1;
+  const children=Number($('f-children').value)||0;
+  const people=adults+children;
   const origin=$('f-origin').value.trim(), dest=$('f-dest').value.trim();
   const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
-  if(!budget||!people||!origin){showErr('Por favor rellena presupuesto, personas y ciudad de origen.');return;}
+  if(!budget||!adults||!origin){showErr('Por favor rellena presupuesto, adultos y ciudad de origen.');return;}
   if(!checkin||!checkout){showErr('Por favor selecciona las fechas de ida y vuelta.');return;}
   if(checkin>=checkout){showErr('La fecha de vuelta debe ser posterior a la de ida.');return;}
   const days = Math.round((new Date(checkout)-new Date(checkin))/(1000*60*60*24));
-  currentMeta={budget,days,people,origin,checkin,checkout};
+  currentMeta={budget,days,people,adults,children,origin,checkin,checkout};
   $('view-form').style.display='none';
   $('view-loading').style.display='block';
   startSteps();
-  const prompt=buildPrompt({budget,days,people,origin,dest,checkin,checkout,prefs:selPrefs});
+  const prompt=buildPrompt({budget,days,people,adults,children,origin,dest,checkin,checkout,prefs:selPrefs});
   try {
     const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.7,response_format:{type:'json_object'},messages:[{role:'system',content:'Eres experto en viajes low-cost. Responde SIEMPRE con JSON puro valido, sin markdown ni texto extra. Precios realistas del mercado europeo.'},{role:'user',content:prompt}]})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||'HTTP '+res.status);}
@@ -422,14 +449,35 @@ async function renderResults(t, meta) {
     return '<div class="bi"><div class="bl">'+item.emoji+' '+item.categoria+'</div><div class="bw"><div class="bb" id="bb'+i+'" style="width:0%"></div></div><div class="ba">'+item.estimacion+'€</div></div><div style="font-size:11px;color:#A09070;margin:-4px 0 3px 140px;">'+item.detalle+'</div>';
   }).join('');
 
-  const days=(t.itinerario||[]).map(d=>'<div class="day"><div class="dh" onclick="toggleDay(this)"><span class="dnum">Día '+d.dia+'</span><span class="dtitle">'+d.titulo+'</span><span class="dcost">'+(d.coste_estimado||'')+'</span><span class="dchev">▼</span></div><div class="db" style="'+(d.dia===1?'display:block':'display:none')+'">'+
-    (d.manana?'<div class="dseg"><strong>Mañana</strong>'+d.manana+'</div>':'')+
-    (d.tarde?'<div class="dseg"><strong style="color:var(--sky)">Tarde</strong>'+d.tarde+'</div>':'')+
-    (d.noche?'<div class="dseg"><strong style="color:var(--ink)">Noche</strong>'+d.noche+'</div>':'')+
-    (d.tip_del_dia?'<div class="dtip">💡 <strong>Tip:</strong> '+d.tip_del_dia+'</div>':'')+
-    '</div></div>').join('');
+  const days=(t.itinerario||[]).map(d=>{
+    const entradaManana = d.manana_entrada && d.manana_entrada!=='null' ? '<a href="'+d.manana_entrada+'" target="_blank" class="ticket-btn">🎟️ Comprar entrada</a>' : '';
+    const entradaTarde = d.tarde_entrada && d.tarde_entrada!=='null' ? '<a href="'+d.tarde_entrada+'" target="_blank" class="ticket-btn">🎟️ Comprar entrada</a>' : '';
+    return '<div class="day"><div class="dh" onclick="toggleDay(this)"><span class="dnum">Día '+d.dia+'</span><span class="dtitle">'+d.titulo+'</span><span class="dcost">'+(d.coste_estimado||'')+'</span><span class="dchev">▼</span></div><div class="db" style="'+(d.dia===1?'display:block':'display:none')+'">'+
+    (d.manana?'<div class="dseg"><strong>🌅 Mañana</strong><div class="dseg-txt">'+d.manana+'</div>'+entradaManana+'</div>':'')+
+    (d.tarde?'<div class="dseg"><strong>☀️ Tarde</strong><div class="dseg-txt">'+d.tarde+'</div>'+entradaTarde+'</div>':'')+
+    (d.noche?'<div class="dseg"><strong>🌙 Noche</strong><div class="dseg-txt">'+d.noche+'</div></div>':'')+
+    (d.tip_del_dia?'<div class="dtip">💡 <strong>Tip del día:</strong> '+d.tip_del_dia+'</div>':'')+
+    '</div></div>';
+  }).join('');
 
-  const rests=(t.restaurantes||[]).map(r=>'<div class="rest"><span style="font-size:20px;flex-shrink:0;">🍽️</span><div><div class="rname">'+r.nombre+'</div><div class="rtag">'+r.tipo+' · '+r.precio_medio+'</div><div class="rwhy">'+r.por_que+'</div></div></div>').join('');
+  const rests=(t.restaurantes||[]).map(r=>{
+    const icon = r.es_callejero ? '🥡' : '🍽️';
+    const badge = r.es_callejero ? '<span class="rest-badge">Comida callejera</span>' : '';
+    const linkBtn = r.link && r.link!=='null' ? '<a href="'+r.link+'" target="_blank" class="rest-link">Ver restaurante →</a>' : '';
+    return '<div class="rest">'+
+      '<span style="font-size:22px;flex-shrink:0;margin-top:2px;">'+icon+'</span>'+
+      '<div style="flex:1">'+
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'+
+          '<div class="rname">'+r.nombre+'</div>'+badge+
+        '</div>'+
+        '<div class="rtag">'+r.tipo+' · '+r.precio_medio+'</div>'+
+        (r.plato_estrella?'<div class="rest-plato">⭐ '+r.plato_estrella+'</div>':'')+
+        (r.descripcion?'<div class="rwhy" style="margin-top:4px;">'+r.descripcion+'</div>':
+         (r.por_que?'<div class="rwhy" style="margin-top:4px;">'+r.por_que+'</div>':''))+
+        (linkBtn?'<div style="margin-top:8px;">'+linkBtn+'</div>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
 
   const hacks=(t.hacks_ahorro||[]).map((h,i)=>'<div class="tip"><div class="tnum">'+(i+1)+'</div><div class="ttxt">'+h+'</div></div>').join('');
 
@@ -442,10 +490,11 @@ async function renderResults(t, meta) {
       '<div class="dest-hero-overlay"></div>' +
       '<div class="dest-hero-content">' +
         '<div class="dest-hero-name">'+t.destino.split(',')[0]+'<br><em>'+t.destino.split(',')[1]+'</em></div>' +
-        '<div class="dest-hero-sub">'+meta.checkin+' → '+meta.checkout+' · '+meta.people+' personas · '+meta.budget+'€ desde '+meta.origin+'</div>' +
+        '<div class="dest-hero-sub">'+meta.checkin+' → '+meta.checkout+' · '+meta.adults+' adultos'+(meta.children>0?' · '+meta.children+' niños':'')+' · '+meta.budget+'€ desde '+meta.origin+'</div>' +
         '<div class="dest-hero-badges">' +
           '<span class="dest-badge copper">'+meta.budget+'€ total</span>' +
           '<span class="dest-badge">'+Math.floor(meta.budget/meta.people)+'€/persona</span>' +
+          '<span class="dest-badge">'+meta.adults+' adultos'+(meta.children>0?' · '+meta.children+' niños':'')+'</span>' +
           '<span class="dest-badge">'+meta.days+' días</span>' +
         '</div>' +
       '</div>' +
