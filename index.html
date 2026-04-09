@@ -126,6 +126,13 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .rest-plato { font-size: 12px; color: var(--forest); font-weight: 600; margin-top: 3px; }
 .rest-link { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; color: var(--sky); text-decoration: none; }
 .rest-link:hover { text-decoration: underline; }
+.mode-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.mode-tab { border: 1.5px solid var(--sand-dark); border-radius: 10px; padding: 12px 10px; cursor: pointer; transition: all .15s; background: var(--sand); text-align: center; user-select: none; }
+.mode-tab:hover { border-color: var(--copper-light); background: var(--copper-pale); }
+.mode-tab.active { border-color: var(--copper); background: var(--copper-pale); }
+.mode-tab-icon { font-size: 20px; margin-bottom: 4px; }
+.mode-tab-title { font-size: 12px; font-weight: 700; color: var(--ink); }
+.mode-tab-desc { font-size: 10px; color: var(--ink-light); margin-top: 2px; line-height: 1.3; }
 .flight-pref-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 4px; }
 .fpref { border: 1.5px solid var(--sand-dark); border-radius: 10px; padding: 12px; cursor: pointer; transition: all .15s; background: var(--sand); text-align: center; user-select: none; }
 .fpref:hover { border-color: var(--copper-light); background: var(--copper-pale); }
@@ -134,6 +141,33 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .fpref-title { font-size: 13px; font-weight: 600; color: var(--ink); }
 .fpref-desc { font-size: 11px; color: var(--ink-light); margin-top: 2px; line-height: 1.4; }
 @media(max-width:500px){ .flight-pref-grid { grid-template-columns: 1fr; } }
+@media(max-width:600px){ .mode-tabs { grid-template-columns: 1fr; } }
+.surprise-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 20px; margin-bottom: 20px; }
+.surprise-card { background: var(--white); border-radius: 16px; overflow: hidden; border: 1px solid rgba(196,129,58,.15); box-shadow: 0 2px 20px rgba(26,20,8,.06); transition: transform .2s; }
+.surprise-card:hover { transform: translateY(-3px); }
+.surprise-photo { height: 200px; position: relative; background-size: cover; background-position: center; }
+.surprise-photo-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(26,20,8,.8) 0%, transparent 60%); }
+.surprise-photo-content { position: absolute; bottom: 14px; left: 16px; }
+.surprise-emoji { font-size: 28px; line-height: 1; margin-bottom: 4px; }
+.surprise-name { font-family: 'Playfair Display',serif; font-size: 22px; font-weight: 900; color: #fff; line-height: 1.1; }
+.surprise-country { font-size: 13px; color: rgba(255,255,255,.7); }
+.badge-dentro { position: absolute; top: 12px; right: 12px; background: #2D4A35; color: #fff; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 100px; }
+.badge-fuera { position: absolute; top: 12px; right: 12px; background: rgba(196,129,58,.9); color: #fff; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 100px; }
+.surprise-body { padding: 18px; }
+.surprise-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 4px; }
+.surprise-price-num { font-family: 'Playfair Display',serif; font-size: 24px; font-weight: 900; color: var(--copper); }
+.surprise-price-pp { font-size: 12px; color: var(--ink-light); }
+.surprise-tipo { font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--ink-light); margin-bottom: 8px; }
+.surprise-desc { font-size: 13px; line-height: 1.6; color: var(--ink-light); margin-bottom: 10px; }
+.surprise-hls { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.surprise-hl { background: var(--sand); border: 1px solid var(--sand-dark); color: var(--ink-light); font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 100px; }
+.surprise-btns { display: flex; flex-direction: column; gap: 7px; }
+.surprise-btn-flight { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px; background: #0770E3; color: #fff; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: opacity .15s; }
+.surprise-btn-flight:hover { opacity: .85; }
+.surprise-btn-hotel { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px; background: #003580; color: #fff; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: opacity .15s; }
+.surprise-btn-hotel:hover { opacity: .85; }
+.surprise-btn-plan { width: 100%; padding: 10px; background: var(--ink); color: var(--copper-pale); border: none; border-radius: 8px; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+.surprise-btn-plan:hover { opacity: .85; }
 .stats { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
 .sn { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--copper); line-height: 1; }
 .sl { font-size: 12px; color: var(--ink-light); font-weight: 500; margin-top: 3px; }
@@ -164,13 +198,31 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="form-wrap">
       <div class="form-card">
         <div id="view-form">
+          <!-- MODE TABS -->
+          <div class="mode-tabs" id="mode-tabs">
+            <div class="mode-tab active" data-mode="presupuesto" onclick="setMode(this)">
+              <div class="mode-tab-icon">💶</div>
+              <div class="mode-tab-title">Tengo presupuesto</div>
+              <div class="mode-tab-desc">La IA optimiza el viaje a tu presupuesto</div>
+            </div>
+            <div class="mode-tab" data-mode="destino" onclick="setMode(this)">
+              <div class="mode-tab-icon">📍</div>
+              <div class="mode-tab-title">Sé adónde voy</div>
+              <div class="mode-tab-desc">Dime cuánto me costará todo</div>
+            </div>
+            <div class="mode-tab" data-mode="sorpresa" onclick="setMode(this)">
+              <div class="mode-tab-icon">✨</div>
+              <div class="mode-tab-title">Sorpréndeme</div>
+              <div class="mode-tab-desc">Muéstrame 4 destinos posibles</div>
+            </div>
+          </div>
           <div class="fgrid">
-            <div class="fg"><label class="lbl">Presupuesto total (€)</label><div class="iw"><span class="iico">💶</span><input id="f-budget" type="number" placeholder="ej. 800" min="100"></div></div>
+            <div class="fg" id="budget-field"><label class="lbl" id="budget-label">Presupuesto total (€)</label><div class="iw"><span class="iico">💶</span><input id="f-budget" type="number" placeholder="ej. 800" min="100"></div></div>
 
             <div class="fg"><label class="lbl">Adultos</label><div class="iw"><span class="iico">👤</span><input id="f-adults" type="number" placeholder="ej. 2" min="1" max="10" value="2"></div></div>
             <div class="fg"><label class="lbl">Niños (opcional)</label><div class="iw"><span class="iico">🧒</span><input id="f-children" type="number" placeholder="0" min="0" max="10" value="0"></div></div>
             <div class="fg"><label class="lbl">Ciudad de origen</label><div class="iw"><span class="iico">🛫</span><input id="f-origin" type="text" placeholder="ej. Madrid, Valencia…"></div></div>
-            <div class="fg full"><label class="lbl">Destino (opcional — la IA elige si lo dejas vacío)</label><div class="iw"><span class="iico">📍</span><input id="f-dest" type="text" placeholder="ej. Lisboa, Praga, Marrakech…"></div></div>
+            <div class="fg full" id="dest-field"><label class="lbl" id="dest-label">Destino (opcional)</label><div class="iw"><span class="iico">📍</span><input id="f-dest" type="text" placeholder="ej. Lisboa, Praga, Marrakech…"></div></div>
             <div class="fg"><label class="lbl">Fecha de ida</label><div class="iw"><span class="iico">🛫</span><input type="date" id="f-checkin" style="padding-left:40px;"></div></div>
             <div class="fg"><label class="lbl">Fecha de vuelta</label><div class="iw"><span class="iico">🛬</span><input type="date" id="f-checkout" style="padding-left:40px;"></div></div>
           </div>
@@ -209,7 +261,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
             </div>
           </div>
           <div id="form-err" class="err" style="display:none;"></div>
-          <button class="btn-cta" id="btn-gen">✦ Generar mi viaje con IA</button>
+          <button class="btn-cta" id="btn-gen" onclick="generateTrip()">✦ Generar mi viaje con IA</button>
         </div>
         <div id="view-loading" style="display:none;">
           <div class="loading">
@@ -261,6 +313,48 @@ function setFlightPref(el) {
   document.querySelectorAll('.fpref').forEach(f => f.classList.remove('active'));
   el.classList.add('active');
   flightPref = el.dataset.v;
+}
+
+let currentMode = 'presupuesto';
+
+function setMode(el) {
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentMode = el.dataset.mode;
+  const budgetField = $('budget-field');
+  const destField = $('dest-field');
+  const budgetLabel = $('budget-label');
+  const destLabel = $('dest-label');
+  const destInput = $('f-dest');
+  const budgetInput = $('f-budget');
+  const btn = $('btn-gen');
+  if (currentMode === 'presupuesto') {
+    budgetField.style.display = '';
+    budgetLabel.textContent = 'Presupuesto total (€)';
+    budgetInput.placeholder = 'ej. 800';
+    destField.style.display = '';
+    destLabel.textContent = 'Destino (opcional — la IA elige si lo dejas vacío)';
+    $('f-dest').placeholder = 'ej. Lisboa, Praga, Marrakech…';
+    btn.textContent = '✦ Generar mi viaje con IA';
+  } else if (currentMode === 'destino') {
+    budgetField.style.display = 'none';
+    destField.style.display = '';
+    destLabel.textContent = 'Destino (requerido)';
+    $('f-dest').placeholder = 'ej. Lisboa, Tokio, Nueva York…';
+    btn.textContent = '✦ Calcular coste real del viaje';
+  } else if (currentMode === 'sorpresa') {
+    budgetField.style.display = '';
+    budgetLabel.textContent = 'Presupuesto total (€)';
+    budgetInput.placeholder = 'ej. 500';
+    destField.style.display = 'none';
+    btn.textContent = '✨ Sorpréndeme con 4 destinos';
+  }
+}
+
+function generateTrip() {
+  if (currentMode === 'sorpresa') { generateSurprise(); return; }
+  if (currentMode === 'destino') { generateNoBudget(); return; }
+  generateNormal();
 }
 
 document.querySelectorAll('.chip').forEach(c => {
@@ -441,7 +535,7 @@ function buildPrompt(d) {
     '}';
 }
 
-$('btn-gen').addEventListener('click', async () => {
+async function generateNormal() {
   hideErr();
   const budget=$('f-budget').value;
   const adults=Number($('f-adults').value)||1;
@@ -472,7 +566,7 @@ $('btn-gen').addEventListener('click', async () => {
   } catch(err){
     stopSteps();$('view-loading').style.display='none';$('view-form').style.display='block';showErr('Error: '+err.message);
   }
-});
+}
 
 async function renderResults(t, meta) {
   const vr=$('view-results');
@@ -591,6 +685,192 @@ function resetApp(){
   $('view-results').style.display='none';
   $('r-grid').innerHTML='';
   $('view-form').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── MODO 2: SÉ ADÓNDE VOY ──────────────────────────────────────────────────
+async function generateNoBudget() {
+  hideErr();
+  const dest = $('f-dest').value.trim();
+  const adults = Number($('f-adults').value)||1;
+  const children = Number($('f-children').value)||0;
+  const origin = $('f-origin').value.trim();
+  const checkin = $('f-checkin').value;
+  const checkout = $('f-checkout').value;
+  if(!dest) { showErr('Indica el destino al que quieres ir.'); return; }
+  if(!origin) { showErr('Indica tu ciudad de origen.'); return; }
+  if(!checkin||!checkout) { showErr('Selecciona las fechas de ida y vuelta.'); return; }
+  if(checkin>=checkout) { showErr('La fecha de vuelta debe ser posterior a la ida.'); return; }
+  const days = Math.round((new Date(checkout)-new Date(checkin))/(1000*60*60*24));
+  const people = adults + children;
+  currentMeta = {days,people,adults,children,origin,checkin,checkout,flightPref,mode:'destino'};
+  $('view-form').style.display='none';
+  $('view-loading').style.display='block';
+  startSteps();
+  const noches = days - 1;
+  const flightTxt = flightPref==='directo'?'VUELO DIRECTO obligatorio.':flightPref==='escala'?'Con escala si ahorra dinero.':'Sin preferencia, precio mas bajo.';
+  const prompt = 'Calcula el coste REAL de este viaje optimizando al maximo el presupuesto:\n' +
+    '- Destino: '+dest+'\n' +
+    '- Origen: '+origin+'\n' +
+    '- Fechas: '+checkin+' al '+checkout+' ('+days+' dias, '+noches+' noches)\n' +
+    '- Adultos: '+adults+', Ninos: '+children+'\n' +
+    '- Preferencia vuelo: '+flightTxt+'\n\n' +
+    'NO hay presupuesto limite. Calcula precios REALES del mercado actual optimizando al maximo.\n' +
+    'Incluye EXACTAMENTE '+days+' dias en el itinerario.\n' +
+    'Responde SOLO con JSON valido sin markdown:\n' +
+    '{\n' +
+    '  "destino": "'+dest+'",\n' +
+    '  "coste_total_estimado": 0,\n' +
+    '  "coste_por_persona": 0,\n' +
+    '  "resumen": "descripcion del viaje y como se ha optimizado el coste",\n' +
+    '  "porque_este_destino": "justificacion de los precios y optimizacion",\n' +
+    '  "presupuesto": { "total": 0, "por_persona": 0, "desglose": [{"categoria":"Vuelos","emoji":"✈️","estimacion":0,"porcentaje":0,"detalle":"vuelo ida vuelta '+people+' personas"},{"categoria":"Alojamiento","emoji":"🏨","estimacion":0,"porcentaje":0,"detalle":"'+noches+' noches"},{"categoria":"Comida","emoji":"🍽️","estimacion":0,"porcentaje":0,"detalle":"'+days+' dias x '+people+' personas"},{"categoria":"Transporte local","emoji":"🚇","estimacion":0,"porcentaje":0,"detalle":"total viaje"},{"categoria":"Actividades","emoji":"🎭","estimacion":0,"porcentaje":0,"detalle":"total viaje"},{"categoria":"Extras","emoji":"💰","estimacion":0,"porcentaje":0,"detalle":"imprevistos"}] },\n' +
+    '  "vuelo_hack": "aerolinea + precio estimado + tip",\n' +
+    '  "alojamiento_hack": "barrio + tipo + precio/noche",\n' +
+    '  "itinerario": [EXACTAMENTE_'+days+'_DIAS],\n' +
+    '  "restaurantes": [4_RESTAURANTES_REALES],\n' +
+    '  "hacks_ahorro": ["hack1","hack2","hack3","hack4","hack5"]\n' +
+    '}';
+  try {
+    const res = await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.7,response_format:{type:'json_object'},messages:[{role:'system',content:'Eres experto en viajes. Calcula costes REALES del mercado actual. JSON valido puro sin markdown.'},{role:'user',content:buildDetailedPrompt(dest,origin,days,noches,people,adults,children,checkin,checkout,flightTxt)}]})});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||'HTTP '+res.status);}
+    const data=await res.json();
+    const raw=data.choices?.[0]?.message?.content||'';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const match=clean.match(/\{[\s\S]*\}/);
+    const trip=JSON.parse(match?match[0]:clean);
+    if(!trip.presupuesto) trip.presupuesto = {total: trip.coste_total_estimado||0, por_persona: trip.coste_por_persona||0, desglose:[]};
+    stopSteps();
+    $('view-loading').style.display='none';
+    await renderResults(trip,{budget:trip.coste_total_estimado||'?',days,people,adults,children,origin,checkin,checkout,mode:'destino'});
+  } catch(err){
+    stopSteps();$('view-loading').style.display='none';$('view-form').style.display='block';showErr('Error: '+err.message);
+  }
+}
+
+function buildDetailedPrompt(dest,origin,days,noches,people,adults,children,checkin,checkout,flightTxt) {
+  let dayLines=[];
+  for(let i=1;i<=days;i++){
+    dayLines.push('{"dia":'+i+',"titulo":"Titulo dia '+i+'","manana":"descripcion detallada manana","manana_entrada":"url o null","tarde":"descripcion detallada tarde","tarde_entrada":"url o null","noche":"plan noche","coste_estimado":"XX euros/persona","tip_del_dia":"truco ahorro"}');
+  }
+  return 'Calcula el coste REAL optimizado de un viaje a '+dest+' desde '+origin+'.\n'+
+    'Fechas: '+checkin+' al '+checkout+' ('+days+' dias, '+noches+' noches). Adultos: '+adults+', Ninos: '+children+'.\n'+
+    'Preferencia vuelo: '+flightTxt+'\n'+
+    'NO hay limite de presupuesto. Usa precios REALES del mercado actual.\n'+
+    'Responde SOLO con JSON valido sin markdown:\n'+
+    '{"destino":"'+dest+'","coste_total_estimado":0,"coste_por_persona":0,"resumen":"como se optimizo","porque_este_destino":"desglose de precios","presupuesto":{"total":0,"por_persona":0,"desglose":[{"categoria":"Vuelos","emoji":"✈️","estimacion":0,"porcentaje":0,"detalle":"ida vuelta '+people+' personas"},{"categoria":"Alojamiento","emoji":"🏨","estimacion":0,"porcentaje":0,"detalle":"'+noches+' noches"},{"categoria":"Comida","emoji":"🍽️","estimacion":0,"porcentaje":0,"detalle":"'+days+' dias x '+people+'"},{"categoria":"Transporte local","emoji":"🚇","estimacion":0,"porcentaje":0,"detalle":"total"},{"categoria":"Actividades","emoji":"🎭","estimacion":0,"porcentaje":0,"detalle":"total"},{"categoria":"Extras","emoji":"💰","estimacion":0,"porcentaje":0,"detalle":"imprevistos"}]},"vuelo_hack":"tip vuelo","alojamiento_hack":"tip alojamiento","itinerario":['+dayLines.join(',')+'],"restaurantes":[{"nombre":"rest1","tipo":"cocina","precio_medio":"XX€","plato_estrella":"plato","descripcion":"desc","link":"url o null","es_callejero":false},{"nombre":"rest2","tipo":"cocina","precio_medio":"XX€","plato_estrella":"plato","descripcion":"desc","link":"url o null","es_callejero":false},{"nombre":"rest3","tipo":"cocina","precio_medio":"XX€","plato_estrella":"plato","descripcion":"desc","link":"url o null","es_callejero":false},{"nombre":"rest4","tipo":"cocina","precio_medio":"XX€","plato_estrella":"plato","descripcion":"desc","link":"url o null","es_callejero":true}],"hacks_ahorro":["hack1","hack2","hack3","hack4","hack5"]}';
+}
+
+// ── MODO 3: SORPRÉNDEME ─────────────────────────────────────────────────────
+async function generateSurprise() {
+  hideErr();
+  const budget = $('f-budget').value;
+  const adults = Number($('f-adults').value)||1;
+  const children = Number($('f-children').value)||0;
+  const origin = $('f-origin').value.trim();
+  const checkin = $('f-checkin').value;
+  const checkout = $('f-checkout').value;
+  if(!budget) { showErr('Indica tu presupuesto total.'); return; }
+  if(!origin) { showErr('Indica tu ciudad de origen.'); return; }
+  if(!checkin||!checkout) { showErr('Selecciona las fechas de ida y vuelta.'); return; }
+  if(checkin>=checkout) { showErr('La fecha de vuelta debe ser posterior a la ida.'); return; }
+  const days = Math.round((new Date(checkout)-new Date(checkin))/(1000*60*60*24));
+  const people = adults+children;
+  const bpp = Math.floor(budget/people);
+  currentMeta = {budget,days,people,adults,children,origin,checkin,checkout,flightPref,mode:'sorpresa'};
+  $('view-form').style.display='none';
+  $('view-loading').style.display='block';
+  startSteps();
+  const prompt = 'Sugiere 4 destinos de viaje desde '+origin+' con presupuesto TOTAL de '+budget+' euros ('+bpp+' euros/persona) para '+people+' personas ('+adults+' adultos, '+children+' ninos).\n'+
+    'Fechas: '+checkin+' al '+checkout+' ('+days+' dias).\n'+
+    'Preferencia vuelo: '+(flightPref==='directo'?'vuelo directo':flightPref==='escala'?'con escala':'sin preferencia')+'.\n'+
+    'Para cada destino indica el coste REAL estimado. Mezcla destinos europeos variados.\n'+
+    'Ordena por precio de menor a mayor.\n'+
+    'Responde SOLO con JSON valido sin markdown:\n'+
+    '{"destinos":['+
+    '{"nombre":"Ciudad, Pais","descripcion":"2 frases de por que es genial para este perfil","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":true,"diferencia":0,"emoji_pais":"🇵🇹","highlights":["highlight1","highlight2","highlight3"],"tipo_viaje":"Cultural / Fiesta / Naturaleza / etc"},'+
+    '{"nombre":"Ciudad, Pais","descripcion":"...","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":true,"diferencia":0,"emoji_pais":"🇨🇿","highlights":["h1","h2","h3"],"tipo_viaje":"..."},'+
+    '{"nombre":"Ciudad, Pais","descripcion":"...","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":false,"diferencia":50,"emoji_pais":"🇮🇹","highlights":["h1","h2","h3"],"tipo_viaje":"..."},'+
+    '{"nombre":"Ciudad, Pais","descripcion":"...","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":false,"diferencia":120,"emoji_pais":"🇬🇷","highlights":["h1","h2","h3"],"tipo_viaje":"..."}'+
+    ']}';
+  try {
+    const res = await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.8,response_format:{type:'json_object'},messages:[{role:'system',content:'Eres experto en viajes low-cost. Sugiere destinos con precios REALES del mercado actual. JSON puro sin markdown.'},{role:'user',content:prompt}]})});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||'HTTP '+res.status);}
+    const data=await res.json();
+    const raw=data.choices?.[0]?.message?.content||'';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const match=clean.match(/\{[\s\S]*\}/);
+    const result=JSON.parse(match?match[0]:clean);
+    stopSteps();
+    $('view-loading').style.display='none';
+    await renderSurprise(result.destinos||[], {budget,days,people,adults,children,origin,checkin,checkout});
+  } catch(err){
+    stopSteps();$('view-loading').style.display='none';$('view-form').style.display='block';showErr('Error: '+err.message);
+  }
+}
+
+async function renderSurprise(destinos, meta) {
+  const vr = $('view-results');
+  vr.style.display = 'block';
+
+  // Fetch photos for all destinations in parallel
+  const photos = await Promise.all(destinos.map(d => fetchPhoto(d.nombre)));
+
+  const cards = destinos.map((d,i) => {
+    const photo = photos[i];
+    const dentroClass = d.dentro_presupuesto ? 'badge-dentro' : 'badge-fuera';
+    const dentroTxt = d.dentro_presupuesto ? '✓ Dentro del presupuesto' : '+'+d.diferencia+'€ sobre presupuesto';
+    const highlights = (d.highlights||[]).map(h=>'<span class="surprise-hl">'+h+'</span>').join('');
+    const flightUrl = buildFlightUrl(meta.origin, d.nombre, meta.checkin, meta.checkout);
+    const hotelUrl = buildHotelUrl(d.nombre, meta.checkin, meta.checkout, meta.adults);
+    return '<div class="surprise-card">'+
+      '<div class="surprise-photo" style="'+(photo?'background-image:url('+photo+')':'background:linear-gradient(135deg,#C4813A,#2D4A35)')+'">'+
+        '<div class="surprise-photo-overlay"></div>'+
+        '<div class="surprise-photo-content">'+
+          '<div class="surprise-emoji">'+d.emoji_pais+'</div>'+
+          '<div class="surprise-name">'+d.nombre.split(',')[0]+'</div>'+
+          '<div class="surprise-country">'+d.nombre.split(',')[1]+'</div>'+
+        '</div>'+
+        '<div class="surprise-'+dentroClass+'">'+dentroTxt+'</div>'+
+      '</div>'+
+      '<div class="surprise-body">'+
+        '<div class="surprise-price">'+
+          '<span class="surprise-price-num">'+d.coste_estimado+'€</span>'+
+          '<span class="surprise-price-pp"> total · '+d.coste_por_persona+'€/persona</span>'+
+        '</div>'+
+        '<div class="surprise-tipo">'+d.tipo_viaje+'</div>'+
+        '<p class="surprise-desc">'+d.descripcion+'</p>'+
+        '<div class="surprise-hls">'+highlights+'</div>'+
+        '<div class="surprise-btns">'+
+          '<a href="'+flightUrl+'" target="_blank" class="surprise-btn-flight">✈️ Ver vuelos</a>'+
+          '<a href="'+hotelUrl+'" target="_blank" class="surprise-btn-hotel">🏨 Ver hoteles</a>'+
+          '<button class="surprise-btn-plan" data-dest="'+encodeURIComponent(d.nombre)+'" onclick="generateFromSurprise(decodeURIComponent(this.dataset.dest))">✦ Planificar este viaje →</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  $('r-grid').innerHTML =
+    '<div style="text-align:center;padding:32px 0 24px;">'+
+      '<div style="font-family:Playfair Display,serif;font-size:clamp(24px,4vw,40px);font-weight:900;letter-spacing:-1px;">Destinos para <em style="font-style:italic;color:var(--copper)">'+meta.budget+'\u20ac</em></div>'+
+      '<p style="font-size:14px;color:var(--ink-light);margin-top:8px;">'+meta.checkin+' → '+meta.checkout+' · '+meta.adults+' adultos'+(meta.children>0?' · '+meta.children+' niños':'')+' · desde '+meta.origin+'</p>'+
+    '</div>'+
+    '<div class="surprise-grid">'+cards+'</div>';
+
+  vr.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function generateFromSurprise(destino) {
+  // Switch to normal mode with this destination pre-filled
+  currentMode = 'presupuesto';
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-mode="presupuesto"]').classList.add('active');
+  setMode(document.querySelector('[data-mode="presupuesto"]'));
+  $('view-results').style.display='none';
+  $('r-grid').innerHTML='';
+  $('view-form').style.display='block';
+  $('f-dest').value = destino;
+  $('f-budget').value = currentMeta.budget;
   window.scrollTo({top:0,behavior:'smooth'});
 }
 </script>
