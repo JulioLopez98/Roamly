@@ -155,17 +155,8 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
             <div class="fg"><label class="lbl">Número de personas</label><div class="iw"><span class="iico">👥</span><input id="f-people" type="number" placeholder="ej. 2" min="1" max="10"></div></div>
             <div class="fg"><label class="lbl">Ciudad de origen</label><div class="iw"><span class="iico">🛫</span><input id="f-origin" type="text" placeholder="ej. Madrid, Valencia…"></div></div>
             <div class="fg full"><label class="lbl">Destino (opcional — la IA elige si lo dejas vacío)</label><div class="iw"><span class="iico">📍</span><input id="f-dest" type="text" placeholder="ej. Lisboa, Praga, Marrakech…"></div></div>
-            <div class="fg full"><label class="lbl">Temporada de viaje</label><div class="iw"><span class="iico">🗓️</span>
-              <select id="f-season">
-                <option value="">¿Cuándo viajas aproximadamente?</option>
-                <option value="enero-febrero">Invierno (Ene – Feb)</option>
-                <option value="marzo-mayo">Primavera (Mar – May)</option>
-                <option value="junio-agosto">Verano (Jun – Ago)</option>
-                <option value="septiembre-noviembre">Otoño (Sep – Nov)</option>
-                <option value="diciembre">Navidades (Dic)</option>
-                <option value="flexible">Fechas flexibles (mejor precio)</option>
-              </select>
-            </div></div>
+            <div class="fg"><label class="lbl">Fecha de ida</label><div class="iw"><span class="iico">🛫</span><input type="date" id="f-checkin" style="padding-left:40px;"></div></div>
+            <div class="fg"><label class="lbl">Fecha de vuelta</label><div class="iw"><span class="iico">🛬</span><input type="date" id="f-checkout" style="padding-left:40px;"></div></div>
           </div>
           <div class="fg" style="margin-bottom:16px;">
             <label class="lbl">Preferencias de viaje</label>
@@ -216,6 +207,14 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 <script>
 const WORKER_URL = 'https://wandering-cherry-8c8f.julio-lg22.workers.dev';
+// Set min date to today
+const today = new Date().toISOString().split('T')[0];
+document.addEventListener('DOMContentLoaded', () => {
+  const ci = document.getElementById('f-checkin');
+  const co = document.getElementById('f-checkout');
+  if(ci) { ci.min = today; ci.addEventListener('change', () => { if(co) co.min = ci.value; }); }
+  if(co) co.min = today;
+});
 const UNSPLASH_KEY = 'F8ledtmjoaV9_RVoT6HvdYCyG_0pxk-anCvP788tgcU';
 const $ = id => document.getElementById(id);
 let selPrefs = [], stepTimer, currentMeta = {};
@@ -238,31 +237,55 @@ function startSteps(){
 function stopSteps(){clearInterval(stepTimer);}
 
 // Smart URL builders
-function getSeasonDates(season) {
+function getSeasonDates(checkin, checkout) {
+  if (checkin && checkout) return { ci: checkin, co: checkout };
   const y = new Date().getFullYear();
-  const map = {
-    'enero-febrero':    { ci: `${y}-01-15`, co: `${y}-01-22` },
-    'marzo-mayo':       { ci: `${y}-04-01`, co: `${y}-04-08` },
-    'junio-agosto':     { ci: `${y}-07-01`, co: `${y}-07-08` },
-    'septiembre-noviembre': { ci: `${y}-09-15`, co: `${y}-09-22` },
-    'diciembre':        { ci: `${y}-12-20`, co: `${y}-12-27` },
-    'flexible':         { ci: `${y}-06-01`, co: `${y}-06-08` },
-  };
-  return map[season] || { ci: `${y}-07-01`, co: `${y}-07-08` };
+  return { ci: y+'-07-01', co: y+'-07-08' };
 }
 
-function buildFlightUrl(origin, destino, season) {
-  const city = destino.split(',')[0].trim();
-  const originCode = origin.trim();
-  const dates = getSeasonDates(season);
-  return `https://www.skyscanner.es/transporte/vuelos/${encodeURIComponent(originCode.toLowerCase().replace(/ /g,'-'))}/${encodeURIComponent(city.toLowerCase().replace(/ /g,'-'))}/${dates.ci.replace(/-/g,'')}/${dates.co.replace(/-/g,'')}/?adults=${currentMeta.people||1}`;
+// IATA airport codes map for common cities
+const IATA = {
+  'valencia': 'VLC', 'madrid': 'MAD', 'barcelona': 'BCN', 'sevilla': 'SVQ',
+  'bilbao': 'BIO', 'malaga': 'AGP', 'alicante': 'ALC', 'palma': 'PMI',
+  'lisboa': 'LIS', 'oporto': 'OPO', 'paris': 'CDG', 'london': 'LHR',
+  'londres': 'LHR', 'roma': 'FCO', 'milan': 'MXP', 'berlin': 'BER',
+  'amsterdam': 'AMS', 'bruselas': 'BRU', 'viena': 'VIE', 'praga': 'PRG',
+  'budapest': 'BUD', 'varsovia': 'WAW', 'cracovia': 'KRK', 'dublin': 'DUB',
+  'edimburgo': 'EDI', 'estocolmo': 'ARN', 'copenhague': 'CPH', 'oslo': 'OSL',
+  'helsinki': 'HEL', 'atenas': 'ATH', 'estambul': 'IST', 'dubai': 'DXB',
+  'marrakech': 'RAK', 'casablanca': 'CMN', 'amsterdam': 'AMS', 'zurich': 'ZRH',
+  'ginebra': 'GVA', 'niza': 'NCE', 'lyon': 'LYS', 'burdeos': 'BOD',
+  'florencia': 'FLR', 'venecia': 'VCE', 'napoles': 'NAP', 'palermo': 'PMO',
+  'tenerife': 'TFN', 'gran canaria': 'LPA', 'ibiza': 'IBZ', 'menorca': 'MAH',
+  'bangkok': 'BKK', 'tokio': 'NRT', 'singapur': 'SIN', 'bali': 'DPS',
+  'nueva york': 'JFK', 'miami': 'MIA', 'cancun': 'CUN', 'bogota': 'BOG',
+  'lima': 'LIM', 'buenos aires': 'EZE', 'rio de janeiro': 'GIG',
+  'sofia': 'SOF', 'bucarest': 'OTP', 'belgrado': 'BEG', 'zagreb': 'ZAG',
+  'ljubljana': 'LJU', 'bratislava': 'BTS', 'tallin': 'TLL', 'riga': 'RIX', 'vilnius': 'VNO'
+};
+
+function getIATA(cityName) {
+  const key = cityName.toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return IATA[key] || cityName.toLowerCase().replace(/ /g, '-');
 }
 
-function buildHotelUrl(destino, season, budget, people) {
+function buildFlightUrl(origin, destino, checkin, checkout) {
+  const originCity = origin.trim();
+  const destCity = destino.split(',')[0].trim();
+  const originCode = getIATA(originCity);
+  const destCode = getIATA(destCity);
+  const dates = getSeasonDates(checkin, checkout);
+  const ci = dates.ci.replace(/-/g,'');
+  const co = dates.co.replace(/-/g,'');
+  const adults = currentMeta.people || 1;
+  return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adults+'&currency=EUR';
+}
+
+function buildHotelUrl(destino, checkin, checkout, people) {
   const city = destino.split(',')[0].trim();
-  const dates = getSeasonDates(season);
-  const bpp = Math.floor((budget * 0.3) / people / (currentMeta.days||5));
-  return `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(city)}&checkin=${dates.ci}&checkout=${dates.co}&group_adults=${people}&nflt=price%3DEUR-min-${bpp}-1`;
+  const dates = getSeasonDates(checkin, checkout);
+  return 'https://www.booking.com/searchresults.es.html?ss='+encodeURIComponent(city)+'&checkin='+dates.ci+'&checkout='+dates.co+'&group_adults='+people+'&group_children=0&no_rooms=1&order=price';
 }
 
 function buildActivitiesUrl(destino) {
@@ -271,8 +294,9 @@ function buildActivitiesUrl(destino) {
 }
 
 function buildTransportUrl(origin, destino) {
-  const city = destino.split(',')[0].trim();
-  return `https://www.rome2rio.com/es/s/${encodeURIComponent(origin.replace(/ /g,'-'))}/${encodeURIComponent(city.replace(/ /g,'-'))}`;
+  const originCity = origin.trim().replace(/ /g,'-');
+  const destCity = destino.split(',')[0].trim().replace(/ /g,'-');
+  return `https://www.rome2rio.com/es/s/${encodeURIComponent(originCity)}/${encodeURIComponent(destCity)}`;
 }
 
 async function fetchPhoto(destino) {
@@ -292,7 +316,7 @@ function buildPrompt(d) {
   const noches = Number(d.days) - 1;
   const destTxt = d.dest ? 'Destino elegido: ' + d.dest + '.' : 'Destino FLEXIBLE: elige el mejor destino calidad-precio para este perfil.';
   const prefsTxt = d.prefs.length ? d.prefs.join(', ') : 'cultura y gastronomia';
-  const seasonTxt = d.season ? 'Temporada: ' + d.season + '.' : '';
+  const seasonTxt = d.checkin ? 'Fechas del viaje: ' + d.checkin + ' al ' + d.checkout + '.' : '';
   const dias = Number(d.days);
   const personas = Number(d.people);
   const presupuesto = Number(d.budget);
@@ -351,13 +375,16 @@ function buildPrompt(d) {
 $('btn-gen').addEventListener('click', async () => {
   hideErr();
   const budget=$('f-budget').value, days=$('f-days').value, people=$('f-people').value;
-  const origin=$('f-origin').value.trim(), dest=$('f-dest').value.trim(), season=$('f-season').value;
+  const origin=$('f-origin').value.trim(), dest=$('f-dest').value.trim();
+  const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
   if(!budget||!days||!people||!origin){showErr('Por favor rellena presupuesto, días, personas y ciudad de origen.');return;}
-  currentMeta={budget,days,people,origin,season};
+  if(!checkin||!checkout){showErr('Por favor selecciona las fechas de ida y vuelta.');return;}
+  if(checkin>=checkout){showErr('La fecha de vuelta debe ser posterior a la de ida.');return;}
+  currentMeta={budget,days,people,origin,checkin,checkout};
   $('view-form').style.display='none';
   $('view-loading').style.display='block';
   startSteps();
-  const prompt=buildPrompt({budget,days,people,origin,dest,season,prefs:selPrefs});
+  const prompt=buildPrompt({budget,days,people,origin,dest,checkin,checkout,prefs:selPrefs});
   try {
     const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.7,response_format:{type:'json_object'},messages:[{role:'system',content:'Eres experto en viajes low-cost. Responde SIEMPRE con JSON puro valido, sin markdown ni texto extra. Precios realistas del mercado europeo.'},{role:'user',content:prompt}]})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||'HTTP '+res.status);}
@@ -368,7 +395,7 @@ $('btn-gen').addEventListener('click', async () => {
     const trip=JSON.parse(match?match[0]:clean);
     stopSteps();
     $('view-loading').style.display='none';
-    await renderResults(trip,{budget,days,people,origin,season});
+    await renderResults(trip,{budget,days,people,origin,checkin,checkout});
   } catch(err){
     stopSteps();$('view-loading').style.display='none';$('view-form').style.display='block';showErr('Error: '+err.message);
   }
@@ -381,8 +408,8 @@ async function renderResults(t, meta) {
   // Fetch photo
   const photoUrl = await fetchPhoto(t.destino);
 
-  const flightUrl = buildFlightUrl(meta.origin, t.destino, meta.season);
-  const hotelUrl = buildHotelUrl(t.destino, meta.season, meta.budget, meta.people);
+  const flightUrl = buildFlightUrl(meta.origin, t.destino, meta.checkin, meta.checkout);
+  const hotelUrl = buildHotelUrl(t.destino, meta.checkin, meta.checkout, meta.people);
   const activitiesUrl = buildActivitiesUrl(t.destino);
   const transportUrl = buildTransportUrl(meta.origin, t.destino);
 
