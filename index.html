@@ -126,6 +126,14 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .rest-plato { font-size: 12px; color: var(--forest); font-weight: 600; margin-top: 3px; }
 .rest-link { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; color: var(--sky); text-decoration: none; }
 .rest-link:hover { text-decoration: underline; }
+.flight-pref-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 4px; }
+.fpref { border: 1.5px solid var(--sand-dark); border-radius: 10px; padding: 12px; cursor: pointer; transition: all .15s; background: var(--sand); text-align: center; user-select: none; }
+.fpref:hover { border-color: var(--copper-light); background: var(--copper-pale); }
+.fpref.active { border-color: var(--copper); background: var(--copper-pale); }
+.fpref-icon { font-size: 20px; margin-bottom: 4px; }
+.fpref-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.fpref-desc { font-size: 11px; color: var(--ink-light); margin-top: 2px; line-height: 1.4; }
+@media(max-width:500px){ .flight-pref-grid { grid-template-columns: 1fr; } }
 .stats { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
 .sn { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--copper); line-height: 1; }
 .sl { font-size: 12px; color: var(--ink-light); font-weight: 500; margin-top: 3px; }
@@ -166,6 +174,27 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
             <div class="fg"><label class="lbl">Fecha de ida</label><div class="iw"><span class="iico">🛫</span><input type="date" id="f-checkin" style="padding-left:40px;"></div></div>
             <div class="fg"><label class="lbl">Fecha de vuelta</label><div class="iw"><span class="iico">🛬</span><input type="date" id="f-checkout" style="padding-left:40px;"></div></div>
           </div>
+          <div class="fg full" style="margin-bottom:16px;">
+            <label class="lbl">Preferencia de vuelo</label>
+            <div class="flight-pref-grid" id="flight-pref">
+              <div class="fpref active" data-v="directo" onclick="setFlightPref(this)">
+                <div class="fpref-icon">✈️</div>
+                <div class="fpref-title">Vuelo directo</div>
+                <div class="fpref-desc">Más rápido, puede ser más caro</div>
+              </div>
+              <div class="fpref" data-v="escala" onclick="setFlightPref(this)">
+                <div class="fpref-icon">🔄</div>
+                <div class="fpref-title">Con escala</div>
+                <div class="fpref-desc">Más barato, pierdes más tiempo</div>
+              </div>
+              <div class="fpref" data-v="indiferente" onclick="setFlightPref(this)">
+                <div class="fpref-icon">💸</div>
+                <div class="fpref-title">Lo más barato</div>
+                <div class="fpref-desc">Sin preferencia, optimizar precio</div>
+              </div>
+            </div>
+          </div>
+
           <div class="fg" style="margin-bottom:16px;">
             <label class="lbl">Preferencias de viaje</label>
             <div class="prefs" id="prefs-wrap">
@@ -226,6 +255,13 @@ document.addEventListener('DOMContentLoaded', () => {
 const UNSPLASH_KEY = 'F8ledtmjoaV9_RVoT6HvdYCyG_0pxk-anCvP788tgcU';
 const $ = id => document.getElementById(id);
 let selPrefs = [], stepTimer, currentMeta = {};
+let flightPref = 'directo';
+
+function setFlightPref(el) {
+  document.querySelectorAll('.fpref').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  flightPref = el.dataset.v;
+}
 
 document.querySelectorAll('.chip').forEach(c => {
   c.addEventListener('click', () => {
@@ -287,7 +323,9 @@ function buildFlightUrl(origin, destino, checkin, checkout) {
   const ci = dates.ci.replace(/-/g,'');
   const co = dates.co.replace(/-/g,'');
   const adults = Number(currentMeta.adults) || 1;
-  return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adults+'&children='+(Number(currentMeta.children)||0)+'&currency=EUR';
+  const stops = currentMeta.flightPref === 'directo' ? '&stops=!oneStop,!twoPlusStops' :
+    currentMeta.flightPref === 'escala' ? '&stops=!direct' : '';
+  return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adults+'&children='+(Number(currentMeta.children)||0)+'&currency=EUR'+stops;
 }
 
 function buildHotelUrl(destino, checkin, checkout, people) {
@@ -330,6 +368,9 @@ function buildPrompt(d) {
   const bpp = Math.floor(d.budget / d.people);
   const noches = Number(d.days) - 1;
   const destTxt = d.dest ? 'Destino elegido: ' + d.dest + '.' : 'Destino FLEXIBLE: elige el mejor destino calidad-precio para este perfil.';
+  const flightTxt = d.flightPref === 'directo' ? 'VUELO DIRECTO obligatorio (sin escalas, aunque sea mas caro).' :
+    d.flightPref === 'escala' ? 'Vuelo con escala permitido si ahorra dinero significativo.' :
+    'Sin preferencia de vuelo, priorizar el precio mas bajo posible.';
   const prefsTxt = d.prefs.length ? d.prefs.join(', ') : 'cultura y gastronomia';
   const seasonTxt = d.checkin ? 'Fechas del viaje: ' + d.checkin + ' al ' + d.checkout + '.' : '';
   const dias = Number(d.days);
@@ -359,6 +400,7 @@ function buildPrompt(d) {
     '- Total personas: '+personas+'\n' +
     '- Origen: '+d.origin+'\n' +
     '- '+destTxt+' '+seasonTxt+'\n' +
+    '- Preferencia vuelo: '+flightTxt+'\n' +
     '- Preferencias: '+prefsTxt+'\n\n' +
     'REGLAS OBLIGATORIAS:\n' +
     '1. "itinerario" debe tener EXACTAMENTE '+dias+' objetos. Es OBLIGATORIO.\n' +
@@ -411,11 +453,11 @@ $('btn-gen').addEventListener('click', async () => {
   if(!checkin||!checkout){showErr('Por favor selecciona las fechas de ida y vuelta.');return;}
   if(checkin>=checkout){showErr('La fecha de vuelta debe ser posterior a la de ida.');return;}
   const days = Math.round((new Date(checkout)-new Date(checkin))/(1000*60*60*24));
-  currentMeta={budget,days,people,adults,children,origin,checkin,checkout};
+  currentMeta={budget,days,people,adults,children,origin,checkin,checkout,flightPref};
   $('view-form').style.display='none';
   $('view-loading').style.display='block';
   startSteps();
-  const prompt=buildPrompt({budget,days,people,adults,children,origin,dest,checkin,checkout,prefs:selPrefs});
+  const prompt=buildPrompt({budget,days,people,adults,children,origin,dest,checkin,checkout,flightPref,prefs:selPrefs});
   try {
     const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.7,response_format:{type:'json_object'},messages:[{role:'system',content:'Eres experto en viajes low-cost. Responde SIEMPRE con JSON puro valido, sin markdown ni texto extra. Precios realistas del mercado europeo.'},{role:'user',content:prompt}]})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||'HTTP '+res.status);}
