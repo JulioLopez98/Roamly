@@ -59,7 +59,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 /* HERO CARD with photo */
 .dest-hero { position: relative; border-radius: 20px; overflow: hidden; height: 320px; margin-bottom: 20px; }
 .dest-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.dest-hero-img-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #C4813A, #2D4A35); }
+.dest-hero-img-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #1A3A4A 0%, #C4813A 50%, #2D4A35 100%); }
 .dest-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(26,20,8,.85) 0%, rgba(26,20,8,.2) 50%, transparent 100%); }
 .dest-hero-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 28px 32px; }
 .dest-hero-name { font-family: 'Playfair Display', serif; font-size: clamp(28px,5vw,48px); font-weight: 900; color: #fff; letter-spacing: -1px; line-height: 1.1; }
@@ -151,7 +151,7 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
         <div id="view-form">
           <div class="fgrid">
             <div class="fg"><label class="lbl">Presupuesto total (€)</label><div class="iw"><span class="iico">💶</span><input id="f-budget" type="number" placeholder="ej. 800" min="100"></div></div>
-            <div class="fg"><label class="lbl">Número de días</label><div class="iw"><span class="iico">📅</span><input id="f-days" type="number" placeholder="ej. 7" min="1" max="30"></div></div>
+
             <div class="fg"><label class="lbl">Número de personas</label><div class="iw"><span class="iico">👥</span><input id="f-people" type="number" placeholder="ej. 2" min="1" max="10"></div></div>
             <div class="fg"><label class="lbl">Ciudad de origen</label><div class="iw"><span class="iico">🛫</span><input id="f-origin" type="text" placeholder="ej. Madrid, Valencia…"></div></div>
             <div class="fg full"><label class="lbl">Destino (opcional — la IA elige si lo dejas vacío)</label><div class="iw"><span class="iico">📍</span><input id="f-dest" type="text" placeholder="ej. Lisboa, Praga, Marrakech…"></div></div>
@@ -278,7 +278,7 @@ function buildFlightUrl(origin, destino, checkin, checkout) {
   const dates = getSeasonDates(checkin, checkout);
   const ci = dates.ci.replace(/-/g,'');
   const co = dates.co.replace(/-/g,'');
-  const adults = currentMeta.people || 1;
+  const adults = Number(currentMeta.people) || 1;
   return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adults+'&currency=EUR';
 }
 
@@ -288,16 +288,19 @@ function buildHotelUrl(destino, checkin, checkout, people) {
   return 'https://www.booking.com/searchresults.es.html?ss='+encodeURIComponent(city)+'&checkin='+dates.ci+'&checkout='+dates.co+'&group_adults='+people+'&group_children=0&no_rooms=1&order=price';
 }
 
-function buildActivitiesUrl(destino) {
+function buildAirbnbUrl(destino, checkin, checkout, people) {
   const city = destino.split(',')[0].trim();
-  return `https://www.getyourguide.es/s/?q=${encodeURIComponent(city)}&searchSource=2`;
+  return 'https://www.airbnb.es/s/'+encodeURIComponent(city)+'/homes?checkin='+checkin+'&checkout='+checkout+'&adults='+people+'&price_max=150';
 }
 
-function buildTransportUrl(origin, destino) {
-  const originCity = origin.trim().replace(/ /g,'-');
-  const destCity = destino.split(',')[0].trim().replace(/ /g,'-');
-  return `https://www.rome2rio.com/es/s/${encodeURIComponent(originCity)}/${encodeURIComponent(destCity)}`;
+function buildActivitiesUrl(destino, checkin, checkout) {
+  const city = destino.split(',')[0].trim();
+  const dateFrom = checkin || '';
+  const dateTo = checkout || '';
+  return 'https://www.getyourguide.es/s/?q='+encodeURIComponent(city)+'&date_from='+dateFrom+'&date_to='+dateTo+'&searchSource=2';
 }
+
+
 
 async function fetchPhoto(destino) {
   const city = destino.split(',')[0].trim();
@@ -374,12 +377,13 @@ function buildPrompt(d) {
 
 $('btn-gen').addEventListener('click', async () => {
   hideErr();
-  const budget=$('f-budget').value, days=$('f-days').value, people=$('f-people').value;
+  const budget=$('f-budget').value, people=$('f-people').value;
   const origin=$('f-origin').value.trim(), dest=$('f-dest').value.trim();
   const checkin=$('f-checkin').value, checkout=$('f-checkout').value;
-  if(!budget||!days||!people||!origin){showErr('Por favor rellena presupuesto, días, personas y ciudad de origen.');return;}
+  if(!budget||!people||!origin){showErr('Por favor rellena presupuesto, personas y ciudad de origen.');return;}
   if(!checkin||!checkout){showErr('Por favor selecciona las fechas de ida y vuelta.');return;}
   if(checkin>=checkout){showErr('La fecha de vuelta debe ser posterior a la de ida.');return;}
+  const days = Math.round((new Date(checkout)-new Date(checkin))/(1000*60*60*24));
   currentMeta={budget,days,people,origin,checkin,checkout};
   $('view-form').style.display='none';
   $('view-loading').style.display='block';
@@ -410,8 +414,8 @@ async function renderResults(t, meta) {
 
   const flightUrl = buildFlightUrl(meta.origin, t.destino, meta.checkin, meta.checkout);
   const hotelUrl = buildHotelUrl(t.destino, meta.checkin, meta.checkout, meta.people);
-  const activitiesUrl = buildActivitiesUrl(t.destino);
-  const transportUrl = buildTransportUrl(meta.origin, t.destino);
+  const activitiesUrl = buildActivitiesUrl(t.destino, meta.checkin, meta.checkout);
+  const airbnbUrl = buildAirbnbUrl(t.destino, meta.checkin, meta.checkout, meta.people);
 
   const desglose=(t.presupuesto?.desglose||[]).map((item,i)=>{
     const pct=item.porcentaje||Math.round(item.estimacion/t.presupuesto.total*100);
@@ -438,7 +442,7 @@ async function renderResults(t, meta) {
       '<div class="dest-hero-overlay"></div>' +
       '<div class="dest-hero-content">' +
         '<div class="dest-hero-name">'+t.destino.split(',')[0]+'<br><em>'+t.destino.split(',')[1]+'</em></div>' +
-        '<div class="dest-hero-sub">'+meta.days+' días · '+meta.people+' personas · '+meta.budget+'€ desde '+meta.origin+'</div>' +
+        '<div class="dest-hero-sub">'+meta.checkin+' → '+meta.checkout+' · '+meta.people+' personas · '+meta.budget+'€ desde '+meta.origin+'</div>' +
         '<div class="dest-hero-badges">' +
           '<span class="dest-badge copper">'+meta.budget+'€ total</span>' +
           '<span class="dest-badge">'+Math.floor(meta.budget/meta.people)+'€/persona</span>' +
@@ -451,8 +455,8 @@ async function renderResults(t, meta) {
     '<div class="book-grid">' +
       '<a href="'+flightUrl+'" target="_blank" class="book-btn book-btn-flight"><span class="book-btn-icon">✈️</span><div class="book-btn-text"><div class="book-btn-title">Buscar vuelos</div><div class="book-btn-desc">'+meta.origin+' → '+t.destino.split(',')[0]+' · Skyscanner</div></div></a>' +
       '<a href="'+hotelUrl+'" target="_blank" class="book-btn book-btn-hotel"><span class="book-btn-icon">🏨</span><div class="book-btn-text"><div class="book-btn-title">Buscar hoteles</div><div class="book-btn-desc">'+t.destino.split(',')[0]+' · Booking.com</div></div></a>' +
-      '<a href="'+activitiesUrl+'" target="_blank" class="book-btn book-btn-activities"><span class="book-btn-icon">🎭</span><div class="book-btn-text"><div class="book-btn-title">Actividades y tours</div><div class="book-btn-desc">'+t.destino.split(',')[0]+' · GetYourGuide</div></div></a>' +
-      '<a href="'+transportUrl+'" target="_blank" class="book-btn book-btn-transport"><span class="book-btn-icon">🚆</span><div class="book-btn-text"><div class="book-btn-title">Cómo llegar</div><div class="book-btn-desc">'+meta.origin+' → '+t.destino.split(',')[0]+' · Rome2rio</div></div></a>' +
+      '<a href="'+activitiesUrl+'" target="_blank" class="book-btn book-btn-activities"><span class="book-btn-icon">🎭</span><div class="book-btn-text"><div class="book-btn-title">Actividades y tours</div><div class="book-btn-desc">'+t.destino.split(',')[0]+' · '+meta.checkin+' → '+meta.checkout+'</div></div></a>' +
+      '<a href="'+airbnbUrl+'" target="_blank" class="book-btn book-btn-transport"><span class="book-btn-icon">🏠</span><div class="book-btn-text"><div class="book-btn-title">Buscar apartamentos</div><div class="book-btn-desc">'+t.destino.split(',')[0]+' · Airbnb</div></div></a>' +
     '</div>' +
 
     // RESUMEN
