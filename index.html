@@ -385,21 +385,25 @@ function getSeasonDates(checkin, checkout) {
 const IATA = {
   'valencia': 'VLC', 'madrid': 'MAD', 'barcelona': 'BCN', 'sevilla': 'SVQ',
   'bilbao': 'BIO', 'malaga': 'AGP', 'alicante': 'ALC', 'palma': 'PMI',
-  'lisboa': 'LIS', 'oporto': 'OPO', 'paris': 'CDG', 'london': 'LHR',
-  'londres': 'LHR', 'roma': 'FCO', 'milan': 'MXP', 'berlin': 'BER',
-  'amsterdam': 'AMS', 'bruselas': 'BRU', 'viena': 'VIE', 'praga': 'PRG',
-  'budapest': 'BUD', 'varsovia': 'WAW', 'cracovia': 'KRK', 'dublin': 'DUB',
-  'edimburgo': 'EDI', 'estocolmo': 'ARN', 'copenhague': 'CPH', 'oslo': 'OSL',
-  'helsinki': 'HEL', 'atenas': 'ATH', 'estambul': 'IST', 'dubai': 'DXB',
-  'marrakech': 'RAK', 'casablanca': 'CMN', 'amsterdam': 'AMS', 'zurich': 'ZRH',
-  'ginebra': 'GVA', 'niza': 'NCE', 'lyon': 'LYS', 'burdeos': 'BOD',
-  'florencia': 'FLR', 'venecia': 'VCE', 'napoles': 'NAP', 'palermo': 'PMO',
+  'lisboa': 'LIS', 'oporto': 'OPO', 'zurich': 'ZRH', 'ginebra': 'GVA',
+  'niza': 'NCE', 'lyon': 'LYS', 'burdeos': 'BOD', 'florencia': 'FLR',
+  'venecia': 'VCE', 'napoles': 'NAP', 'palermo': 'PMO',
   'tenerife': 'TFN', 'gran canaria': 'LPA', 'ibiza': 'IBZ', 'menorca': 'MAH',
-  'bangkok': 'BKK', 'tokio': 'NRT', 'singapur': 'SIN', 'bali': 'DPS',
-  'nueva york': 'JFK', 'miami': 'MIA', 'cancun': 'CUN', 'bogota': 'BOG',
-  'lima': 'LIM', 'buenos aires': 'EZE', 'rio de janeiro': 'GIG',
-  'sofia': 'SOF', 'bucarest': 'OTP', 'belgrado': 'BEG', 'zagreb': 'ZAG',
-  'ljubljana': 'LJU', 'bratislava': 'BTS', 'tallin': 'TLL', 'riga': 'RIX', 'vilnius': 'VNO'
+  'miami': 'MIA', 'cancun': 'CUN', 'bogota': 'BOG', 'lima': 'LIM',
+  'buenos aires': 'EZE', 'rio de janeiro': 'GIG', 'sofia': 'SOF',
+  'bucarest': 'OTP', 'belgrado': 'BEG', 'zagreb': 'ZAG', 'bratislava': 'BTS',
+  'tallin': 'TLL', 'riga': 'RIX', 'vilnius': 'VNO', 'helsinki': 'HEL',
+  'dubai': 'DXB', 'bangkok': 'BKK', 'singapur': 'SIN', 'bali': 'DPS',
+  'marrakech': 'RAK', 'casablanca': 'CMN', 'cracovia': 'KRK',
+  'varsovia': 'WAW', 'budapest': 'BUD', 'praga': 'PRG', 'viena': 'VIE',
+  'bruselas': 'BRU', 'oslo': 'OSL', 'copenhague': 'CPH', 'edimburgo': 'EDI',
+  'dublin': 'DUB', 'atenas': 'ATH', 'estambul': 'IST',
+  // Multi-airport cities - use city codes so Skyscanner compares ALL airports
+  'paris': 'PARI', 'París': 'PARI', 'london': 'LOND', 'londres': 'LOND',
+  'nueva york': 'NYCA', 'new york': 'NYCA', 'tokio': 'TYO', 'tokyo': 'TYO',
+  'milan': 'MILA', 'milán': 'MILA', 'roma': 'ROME', 'berlin': 'BERL',
+  'amsterdam': 'AMS', 'estocolmo': 'STO', 'stockholm': 'STO',
+  'madrid': 'MAD', 'barcelona': 'BCN', 'lisboa': 'LIS',
 };
 
 function getIATA(cityName) {
@@ -416,10 +420,11 @@ function buildFlightUrl(origin, destino, checkin, checkout) {
   const dates = getSeasonDates(checkin, checkout);
   const ci = dates.ci.replace(/-/g,'');
   const co = dates.co.replace(/-/g,'');
-  const adults = Number(currentMeta.adults) || 1;
+  const adultCount = Number(currentMeta.adults) || Number(currentMeta.people) || 1;
+  const childCount = Number(currentMeta.children) || 0;
   const stops = currentMeta.flightPref === 'directo' ? '&stops=!oneStop,!twoPlusStops' :
     currentMeta.flightPref === 'escala' ? '&stops=!direct' : '';
-  return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adults+'&children='+(Number(currentMeta.children)||0)+'&currency=EUR'+stops;
+  return 'https://www.skyscanner.es/transporte/vuelos/'+originCode+'/'+destCode+'/'+ci+'/'+co+'/?adults='+adultCount+'&children='+childCount+'&currency=EUR'+stops;
 }
 
 function buildHotelUrl(destino, checkin, checkout, people) {
@@ -496,16 +501,21 @@ function buildPrompt(d) {
     '- '+destTxt+' '+seasonTxt+'\n' +
     '- Preferencia vuelo: '+flightTxt+'\n' +
     '- Preferencias: '+prefsTxt+'\n\n' +
-    'REGLAS OBLIGATORIAS:\n' +
-    '1. "itinerario" debe tener EXACTAMENTE '+dias+' objetos. Es OBLIGATORIO.\n' +
-    '2. La suma de "estimacion" en desglose debe ser aproximadamente '+presupuesto+' euros totales.\n' +
-    '3. Alojamiento = '+noches+' noches.\n' +
-    '4. "restaurantes" debe tener EXACTAMENTE 4 restaurantes reales con nombres reales.\n' +
-    '5. Usa nombres REALES de lugares, calles y restaurantes.\n' +
-    '6. Travel hacking: aeropuertos alternativos, barrios economicos bien ubicados, menu del dia, transporte publico, free tours.\n\n' +
+    'REGLAS CRITICAS:\n' +
+    '1. Usa precios REALES del mercado actual. NO inventes precios baratos para cuadrar el presupuesto.\n' +
+    '2. Si el viaje al destino indicado cuesta MAS que '+presupuesto+' euros, pon "presupuesto_insuficiente": true y calcula el coste_real_minimo.\n' +
+    '3. Si el presupuesto SI alcanza, pon "presupuesto_insuficiente": false y optimiza al maximo.\n' +
+    '4. "itinerario" debe tener EXACTAMENTE '+dias+' objetos.\n' +
+    '5. La suma de estimaciones debe reflejar el COSTE REAL, no el presupuesto disponible.\n' +
+    '6. "restaurantes" debe tener EXACTAMENTE 4 restaurantes reales.\n' +
+    '7. Usa nombres REALES de lugares y restaurantes.\n' +
+    '8. Travel hacking: aeropuertos alternativos, barrios economicos, menu del dia, transporte publico, free tours.\n\n' +
     'Responde SOLO con JSON valido. Sin texto extra. Sin markdown.\n\n' +
     '{\n' +
     '  "destino": "Ciudad, Pais",\n' +
+    '  "presupuesto_insuficiente": false,\n' +
+    '  "coste_real_minimo": 0,\n' +
+    '  "alternativas_sugeridas": [],\n' +
     '  "resumen": "2-3 frases",\n' +
     '  "porque_este_destino": "justificacion",\n' +
     '  "presupuesto": {\n' +
@@ -553,7 +563,7 @@ async function generateNormal() {
   startSteps();
   const prompt=buildPrompt({budget,days,people,adults,children,origin,dest,checkin,checkout,flightPref,prefs:selPrefs});
   try {
-    const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.7,response_format:{type:'json_object'},messages:[{role:'system',content:'Eres experto en viajes low-cost. Responde SIEMPRE con JSON puro valido, sin markdown ni texto extra. Precios realistas del mercado europeo.'},{role:'user',content:prompt}]})});
+    const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.7,response_format:{type:'json_object'},messages:[{role:'system',content:'Eres experto en viajes low-cost. Responde SIEMPRE con JSON puro valido, sin markdown ni texto extra. IMPORTANTE: Los precios en el desglose son ESTIMACIONES orientativas basadas en precios historicos tipicos. Indica siempre en detalle que son precios medios aproximados, no precios garantizados. Para vuelos usa rangos tipicos reales segun la ruta y temporada.'},{role:'user',content:prompt}]})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.error?.message||'HTTP '+res.status);}
     const data=await res.json();
     const raw=data.choices?.[0]?.message?.content||'';
@@ -572,6 +582,24 @@ async function renderResults(t, meta) {
   const vr=$('view-results');
   vr.style.display='block';
 
+  // ── BUDGET INSUFFICIENT: show alert + trigger surprise mode ──
+  if (t.presupuesto_insuficiente) {
+    const costeReal = t.coste_real_minimo || '?';
+    const diff = costeReal !== '?' ? (costeReal - Number(meta.budget)) : '?';
+    $('r-grid').innerHTML =
+      '<div style="text-align:center;padding:40px 0 20px;">' +
+        '<div style="font-size:48px;margin-bottom:12px;">✈️</div>' +
+        '<h2 style="font-family:Playfair Display,serif;font-size:clamp(22px,4vw,36px);font-weight:900;letter-spacing:-1px;margin-bottom:12px;">'+t.destino.split(',')[0]+' necesita más presupuesto</h2>' +
+        '<p style="font-size:15px;color:var(--ink-light);max-width:480px;margin:0 auto 8px;line-height:1.6;">Con <strong>'+meta.budget+'€</strong> no alcanza para ir a <strong>'+t.destino+'</strong> en esas fechas. El coste mínimo real estimado es <strong style="color:var(--copper)">'+costeReal+'€</strong>'+(diff!=='?'?' (+'+diff+'€)':'')+'.</p>' +
+        '<p style="font-size:14px;color:var(--ink-light);max-width:480px;margin:0 auto 20px;">Pero con tu presupuesto puedes ir a estos destinos:</p>' +
+      '</div>';
+    vr.scrollIntoView({behavior:'smooth',block:'start'});
+    // Auto-trigger surprise mode with same params
+    currentMeta = {...meta, mode:'sorpresa'};
+    await generateSurpriseFromBudget(meta);
+    return;
+  }
+
   // Fetch photo
   const photoUrl = await fetchPhoto(t.destino);
 
@@ -582,7 +610,7 @@ async function renderResults(t, meta) {
 
   const desglose=(t.presupuesto?.desglose||[]).map((item,i)=>{
     const pct=item.porcentaje||Math.round(item.estimacion/t.presupuesto.total*100);
-    return '<div class="bi"><div class="bl">'+item.emoji+' '+item.categoria+'</div><div class="bw"><div class="bb" id="bb'+i+'" style="width:0%"></div></div><div class="ba">'+item.estimacion+'€</div></div><div style="font-size:11px;color:#A09070;margin:-4px 0 3px 140px;">'+item.detalle+'</div>';
+    return '<div class="bi"><div class="bl">'+item.emoji+' '+item.categoria+'</div><div class="bw"><div class="bb" id="bb'+i+'" style="width:0%"></div></div><div class="ba">~'+item.estimacion+'€</div></div><div style="font-size:11px;color:#A09070;margin:-4px 0 3px 140px;">'+item.detalle+'</div>';
   }).join('');
 
   const days=(t.itinerario||[]).map(d=>{
@@ -652,7 +680,7 @@ async function renderResults(t, meta) {
     '</div>' +
 
     // PRESUPUESTO
-    (t.presupuesto?'<div class="rcard"><div class="ch"><div class="cico">📊</div><div><div class="ct">Desglose del presupuesto</div><div class="cs">Total: '+t.presupuesto.total+'€ · '+t.presupuesto.por_persona+'€/persona</div></div></div>'+desglose+'<div class="hack-grid"><div class="hbox"><div class="hlbl">✈️ Hack vuelo</div><div class="htxt">'+(t.vuelo_hack||'')+'</div></div><div class="hbox g"><div class="hlbl">🏨 Hack alojamiento</div><div class="htxt">'+(t.alojamiento_hack||'')+'</div></div></div></div>':'') +
+    (t.presupuesto?'<div class="rcard"><div class="ch"><div class="cico">📊</div><div><div class="ct">Desglose del presupuesto</div><div class="cs">Total estimado: '+t.presupuesto.total+'€ · '+t.presupuesto.por_persona+'€/persona</div></div></div><div style="background:#FEF9EC;border:1px solid #F0D080;border-radius:8px;padding:11px 14px;font-size:12px;color:#7A5C00;line-height:1.6;margin-bottom:14px;">⚠️ <strong>Precios orientativos</strong> — Las estimaciones se basan en precios históricos y pueden variar. Confirma siempre el precio real en Skyscanner y Booking antes de reservar.</div>'+desglose+'<div class="hack-grid"><div class="hbox"><div class="hlbl">✈️ Hack vuelo</div><div class="htxt">'+(t.vuelo_hack||'')+'</div><a href="'+flightUrl+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;font-weight:600;color:#0770E3;text-decoration:none;">Ver precios reales →</a></div><div class="hbox g"><div class="hlbl">🏨 Hack alojamiento</div><div class="htxt">'+(t.alojamiento_hack||'')+'</div></div><a href="'+hotelUrl+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;font-weight:600;color:#003580;text-decoration:none;">Ver disponibilidad →</a></div></div></div>':'') +
 
     // ITINERARIO
     (t.itinerario?.length?'<div class="rcard"><div class="ch"><div class="cico">🗺️</div><div><div class="ct">Itinerario día por día</div><div class="cs">'+t.itinerario.length+' días planificados</div></div></div>'+days+'</div>':'') +
@@ -679,6 +707,27 @@ function toggleDay(dh){
   const open=db.style.display==='block';
   db.style.display=open?'none':'block';
   chev.style.transform=open?'none':'rotate(180deg)';
+}
+
+async function generateSurpriseFromBudget(meta) {
+  const budget = meta.budget;
+  const people = meta.adults + meta.children;
+  const bpp = Math.floor(budget/people);
+  const prompt = 'Sugiere 4 destinos de viaje desde '+meta.origin+' con presupuesto TOTAL de '+budget+' euros ('+bpp+' euros/persona) para '+people+' personas.\n'+
+    'Fechas: '+meta.checkin+' al '+meta.checkout+' ('+meta.days+' dias).\n'+
+    'Usa precios REALES. Ordena por precio de menor a mayor.\n'+
+    'Responde SOLO con JSON valido:\n'+
+    '{"destinos":[{"nombre":"Ciudad, Pais","descripcion":"2 frases","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":true,"diferencia":0,"emoji_pais":"🇵🇹","highlights":["h1","h2","h3"],"tipo_viaje":"tipo"},{"nombre":"Ciudad, Pais","descripcion":"2 frases","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":true,"diferencia":0,"emoji_pais":"🇨🇿","highlights":["h1","h2","h3"],"tipo_viaje":"tipo"},{"nombre":"Ciudad, Pais","descripcion":"2 frases","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":false,"diferencia":50,"emoji_pais":"🇮🇹","highlights":["h1","h2","h3"],"tipo_viaje":"tipo"},{"nombre":"Ciudad, Pais","descripcion":"2 frases","coste_estimado":0,"coste_por_persona":0,"dentro_presupuesto":false,"diferencia":100,"emoji_pais":"🇬🇷","highlights":["h1","h2","h3"],"tipo_viaje":"tipo"}]}';
+  try {
+    const res = await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o',temperature:0.8,response_format:{type:'json_object'},messages:[{role:'system',content:'Experto en viajes. Precios REALES. JSON puro.'},{role:'user',content:prompt}]})});
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content||'';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(clean.match(/\{[\s\S]*\}/)?.[0]||clean);
+    await renderSurprise(result.destinos||[], meta);
+  } catch(e) {
+    $('r-grid').innerHTML += '<p style="text-align:center;color:var(--ink-light);font-size:14px;padding:20px;">No se pudieron cargar alternativas. Prueba el modo Sorpréndeme.</p>';
+  }
 }
 
 function resetApp(){
