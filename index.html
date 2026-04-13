@@ -322,7 +322,14 @@ function buildFlightUrl(origin, dest, checkin, checkout, adults, children) {
   const o = getIATA(origin), d = getIATA(dest);
   const ci = checkin.replace(/-/g,''), co = checkout.replace(/-/g,'');
   const stops = flightPref==='directo' ? '&stops=!oneStop,!twoPlusStops' : flightPref==='escala' ? '&stops=!direct' : '';
-  return 'https://www.skyscanner.es/transporte/vuelos/'+o+'/'+d+'/'+ci+'/'+co+'/?adults='+adults+'&children='+children+'&currency=EUR'+stops;
+  // Skyscanner requires adultsv2 and childrenv2 (with ages) parameters
+  // For children we use age 10 as default since we don't collect ages
+  let childParam = '';
+  if(children > 0) {
+    const ages = Array(children).fill('10').join('|');
+    childParam = '&childrenv2='+ages;
+  }
+  return 'https://www.skyscanner.es/transporte/vuelos/'+o+'/'+d+'/'+ci+'/'+co+'/?adultsv2='+adults+childParam+'&currency=EUR'+stops;
 }
 
 function buildHotelUrl(dest, checkin, checkout, adults, children) {
