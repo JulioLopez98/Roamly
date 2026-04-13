@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roamly — AI Travel Planner</title>
+<meta name="description" content="Free AI travel planner. Get a detailed day-by-day itinerary with real restaurant recommendations and direct booking links for flights, hotels and activities.">
+<meta property="og:title" content="Roamly — AI Travel Planner">
+<meta property="og:description" content="Generate a complete travel itinerary in 30 seconds. Real places, real restaurants, direct booking links.">
+<meta property="og:url" content="https://tryroamly.netlify.app">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Roamly — AI Travel Planner">
+<meta name="twitter:description" content="Free AI travel planner with day-by-day itineraries and direct booking links.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -130,6 +139,16 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .ttxt { font-size: 13px; line-height: 1.6; color: var(--ink-light); }
 .btn-reset { display: flex; align-items: center; gap: 7px; margin: 28px auto 0; padding: 13px 26px; background: transparent; border: 1.5px solid var(--ink-light); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--ink-light); cursor: pointer; transition: all .2s; }
 .btn-reset:hover { background: var(--ink); color: var(--copper-pale); border-color: var(--ink); }
+.btns-row { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+.btn-share { display: flex; align-items: center; gap: 7px; padding: 13px 26px; background: var(--forest); color: #fff; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+.btn-share:hover { opacity: .85; transform: translateY(-1px); }
+.btn-share-wa { background: #25D366; }
+.btn-copy { display: flex; align-items: center; gap: 7px; padding: 13px 26px; background: var(--copper); color: #fff; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; }
+.btn-copy:hover { opacity: .85; transform: translateY(-1px); }
+.proof-item { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.6); border: 1px solid rgba(196,129,58,.2); color: var(--ink-light); font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 100px; }
+.hero-proof { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
+.share-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--copper-pale); padding: 12px 24px; border-radius: 100px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 9999; }
+.share-toast.show { opacity: 1; }
 @media(max-width:600px) {
   nav { padding: 18px 20px; }
   .form-card { padding: 22px 18px; }
@@ -152,9 +171,15 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="badge">Beta</div>
   </nav>
   <div class="hero-inner">
-    <div class="eyebrow">✦ AI-powered travel planning</div>
-    <h1>Planifica tu viaje<br><em>de forma inteligente</em></h1>
-    <p class="hero-sub">Dinos adónde quieres ir y cuándo. La IA genera el itinerario completo con los mejores links para reservar al mejor precio.</p>
+    <div class="eyebrow">✦ Gratis · Sin registro · 30 segundos</div>
+    <h1>Tu próximo viaje,<br><em>planificado por IA</em></h1>
+    <p class="hero-sub">Destino + fechas = itinerario completo día por día, restaurantes reales y links directos a Skyscanner, Booking y Airbnb con tus fechas ya rellenadas.</p>
+    <div class="hero-proof">
+      <div class="proof-item">🗺️ Itinerario día por día</div>
+      <div class="proof-item">🍽️ Restaurantes reales</div>
+      <div class="proof-item">✈️ Links de reserva directos</div>
+      <div class="proof-item">💡 Hacks de viaje</div>
+    </div>
 
     <div class="form-wrap">
       <div class="form-card">
@@ -254,8 +279,13 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 <div class="results" id="view-results" style="display:none;">
   <div id="r-grid"></div>
-  <div style="text-align:center;"><button class="btn-reset" onclick="resetApp()">← Planificar otro viaje</button></div>
+  <div class="btns-row">
+    <button class="btn-share btn-share-wa" onclick="shareWhatsApp()">💬 Compartir en WhatsApp</button>
+    <button class="btn-copy" onclick="copyLink()">🔗 Copiar link</button>
+    <button class="btn-reset" onclick="resetApp()">← Planificar otro viaje</button>
+  </div>
 </div>
+<div class="share-toast" id="share-toast">¡Link copiado!</div>
 
 <script>
 const WORKER_URL = 'https://wandering-cherry-8c8f.julio-lg22.workers.dev';
@@ -547,6 +577,24 @@ function resetApp(){
   $('view-form').style.display='block';
   window.scrollTo({top:0,behavior:'smooth'});
 }
+function shareWhatsApp(){
+  const m = currentMeta;
+  const dest = (m.dest||'').split(',')[0];
+  const text = 'Mira el itinerario que me ha generado Roamly para ' + dest + ' (' + m.checkin + ' al ' + m.checkout + ')! https://tryroamly.netlify.app';
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+function copyLink(){
+  const text = 'Roamly - AI Travel Planner: https://tryroamly.netlify.app';
+  navigator.clipboard.writeText(text).then(function() {
+    var toast = document.getElementById('share-toast');
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 2500);
+  }).catch(function() {
+    prompt('Copia este link:', 'https://tryroamly.netlify.app');
+  });
+}
+
 </script>
 </body>
 </html>
